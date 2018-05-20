@@ -1,0 +1,36 @@
+666 	swap
+3.5
+6.0
+8.5
+11.0
+13.5
+298
+198
+evaluate Initial w
+-166.039924976597
+begin	sampling using mcmc	random walk
+298
+198
+evaluate Initial w
+-96.85662290301492
+begin	sampling using mcmc	random walk
+298
+198
+evaluate Initial w
+-581.1397374180896
+begin	sampling using mcmc	random walk
+298
+198
+evaluate Initial w
+-52.83088521982633
+begin	sampling using mcmc	random walk
+298
+198
+evaluate Initial w
+-68.36938087271642
+begin	sampling using mcmc	random walk
+298
+198
+evaluate Initial w
+-43.04738795689552
+begin	sampling using mcmc	random walk

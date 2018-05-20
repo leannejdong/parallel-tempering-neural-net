@@ -1,0 +1,3548 @@
+konark@konark-XPS-8930 ~/Parallel_Tempering $ python3 Rough/paralleltemp_fnn.py
+3.5
+6.0
+8.5
+11.0
+13.5
+16.0
+18.5
+21.0
+23.5
+26.0
+28.5
+31.0
+33.5
+36.0
+38.5
+41.0
+43.5
+46.0
+48.5
+2000 100 20.0
+0 100
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-446.73778116055473
+begin sampling using mcmc random walk
+944  num accepted
+47.2 % was accepted
+0
+561.1503396798496
+298
+198
+evaluate Initial w
+-24.591215444382367
+begin sampling using mcmc random walk
+1622  num accepted
+81.1 % was accepted
+1
+68.13805055374023
+298
+198
+evaluate Initial w
+-3.5128350638303685
+begin sampling using mcmc random walk
+1799  num accepted
+89.95 % was accepted
+2
+33.72588539004918
+298
+198
+evaluate Initial w
+-48.415995572732555
+begin sampling using mcmc random walk
+1844  num accepted
+92.2 % was accepted
+3
+-0.4470528971877382
+298
+198
+evaluate Initial w
+-9.370028483910295
+begin sampling using mcmc random walk
+1815  num accepted
+90.75 % was accepted
+4
+10.669377217101209
+298
+198
+evaluate Initial w
+-50.05685998947326
+begin sampling using mcmc random walk
+1802  num accepted
+90.1 % was accepted
+5
+12.756883291795061
+298
+198
+evaluate Initial w
+-17.73308170767518
+begin sampling using mcmc random walk
+1855  num accepted
+92.75 % was accepted
+6
+5.5075617768302525
+298
+198
+evaluate Initial w
+-1.911907890497981
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+7
+3.119405327948333
+298
+198
+evaluate Initial w
+-3.113508271752808
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+8
+5.112394925700383
+298
+198
+evaluate Initial w
+-29.717329011088353
+begin sampling using mcmc random walk
+1877  num accepted
+93.85 % was accepted
+9
+2.4335640787493475
+298
+198
+evaluate Initial w
+-11.230479220979095
+begin sampling using mcmc random walk
+1879  num accepted
+93.95 % was accepted
+10
+5.865930485606227
+298
+198
+evaluate Initial w
+-31.25191569075052
+begin sampling using mcmc random walk
+1907  num accepted
+95.35 % was accepted
+11
+-12.984515169867224
+298
+198
+evaluate Initial w
+-16.41227179148461
+begin sampling using mcmc random walk
+1890  num accepted
+94.5 % was accepted
+12
+0.7776850237841588
+298
+198
+evaluate Initial w
+-10.57543967862762
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+13
+-3.248537205592773
+298
+198
+evaluate Initial w
+-2.7009874809716647
+begin sampling using mcmc random walk
+1939  num accepted
+96.95 % was accepted
+14
+0.5953311835042127
+298
+198
+evaluate Initial w
+-5.820170053465145
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+15
+0.9521232579194325
+298
+198
+evaluate Initial w
+-10.784222101544382
+begin sampling using mcmc random walk
+1886  num accepted
+94.3 % was accepted
+16
+-0.24704762654034618
+298
+198
+evaluate Initial w
+-3.0587694703058683
+begin sampling using mcmc random walk
+1940  num accepted
+97.0 % was accepted
+17
+-2.2950274902969343
+298
+198
+evaluate Initial w
+-0.20674665129640807
+begin sampling using mcmc random walk
+1913  num accepted
+95.65 % was accepted
+18
+2.610011071843723
+298
+198
+evaluate Initial w
+-16.45695604873276
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+19
+-0.08721806520722881
+chains swapped
+100 200
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-7.32899175748646
+begin sampling using mcmc random walk
+1089  num accepted
+54.45 % was accepted
+0
+526.8162924386831
+298
+198
+evaluate Initial w
+-20.614018339261154
+begin sampling using mcmc random walk
+1613  num accepted
+80.65 % was accepted
+1
+101.0541812142967
+298
+198
+evaluate Initial w
+-51.57125461128093
+begin sampling using mcmc random walk
+1741  num accepted
+87.05 % was accepted
+2
+26.685546709176357
+298
+198
+evaluate Initial w
+3.4380066500021598
+begin sampling using mcmc random walk
+1785  num accepted
+89.25 % was accepted
+3
+30.528673345040716
+298
+198
+evaluate Initial w
+-50.24834330339081
+begin sampling using mcmc random walk
+1882  num accepted
+94.1 % was accepted
+4
+-13.692633326428245
+298
+198
+evaluate Initial w
+-7.2142588071619205
+begin sampling using mcmc random walk
+1887  num accepted
+94.35 % was accepted
+5
+0.5967968008329532
+298
+198
+evaluate Initial w
+-2.520162921232643
+begin sampling using mcmc random walk
+1858  num accepted
+92.9 % was accepted
+6
+13.912697249519766
+298
+198
+evaluate Initial w
+0.2930052781823612
+begin sampling using mcmc random walk
+1899  num accepted
+94.95 % was accepted
+7
+3.700772387531319
+298
+198
+evaluate Initial w
+-26.419295187304446
+begin sampling using mcmc random walk
+1862  num accepted
+93.1 % was accepted
+8
+-0.48830730340063083
+298
+198
+evaluate Initial w
+-5.60176963479119
+begin sampling using mcmc random walk
+1859  num accepted
+92.95 % was accepted
+9
+4.758167657510854
+298
+198
+evaluate Initial w
+-24.61735352946038
+begin sampling using mcmc random walk
+1877  num accepted
+93.85 % was accepted
+10
+5.603205009611082
+298
+198
+evaluate Initial w
+-2.364806574927426
+begin sampling using mcmc random walk
+1925  num accepted
+96.25 % was accepted
+11
+1.9587369112855497
+298
+198
+evaluate Initial w
+-6.848338061061924
+begin sampling using mcmc random walk
+1940  num accepted
+97.0 % was accepted
+12
+-2.64243568202395
+298
+198
+evaluate Initial w
+-15.588837280872035
+begin sampling using mcmc random walk
+1892  num accepted
+94.6 % was accepted
+13
+-1.0675916099395535
+298
+198
+evaluate Initial w
+-2.7125271905424277
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+14
+6.421152599649859
+298
+198
+evaluate Initial w
+-7.166408464136635
+begin sampling using mcmc random walk
+1953  num accepted
+97.65 % was accepted
+15
+-5.60780085879972
+298
+198
+evaluate Initial w
+-8.703839130266593
+begin sampling using mcmc random walk
+1955  num accepted
+97.75 % was accepted
+16
+-2.8097644322883935
+298
+198
+evaluate Initial w
+-3.528552060226064
+begin sampling using mcmc random walk
+1931  num accepted
+96.55 % was accepted
+17
+1.6665795525155687
+298
+198
+evaluate Initial w
+-2.1890378742964303
+begin sampling using mcmc random walk
+1954  num accepted
+97.7 % was accepted
+18
+-1.7170008444424587
+298
+198
+evaluate Initial w
+-15.231395555551934
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+19
+-1.3972032239562133
+chains swapped
+200 300
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+8.886373327913784
+begin sampling using mcmc random walk
+1042  num accepted
+52.1 % was accepted
+0
+522.5917860684689
+298
+198
+evaluate Initial w
+-5.180741892429397
+begin sampling using mcmc random walk
+1629  num accepted
+81.45 % was accepted
+1
+91.15387526789803
+298
+198
+evaluate Initial w
+-51.53117109626346
+begin sampling using mcmc random walk
+1696  num accepted
+84.8 % was accepted
+2
+51.92966072784044
+298
+198
+evaluate Initial w
+4.318392060700979
+begin sampling using mcmc random walk
+1769  num accepted
+88.45 % was accepted
+3
+32.67253470346734
+298
+198
+evaluate Initial w
+-61.774974924571204
+begin sampling using mcmc random walk
+1755  num accepted
+87.75 % was accepted
+4
+21.94320773417928
+298
+198
+evaluate Initial w
+0.5868848446633419
+begin sampling using mcmc random walk
+1856  num accepted
+92.8 % was accepted
+5
+15.550964111806179
+298
+198
+evaluate Initial w
+-1.7382869940451433
+begin sampling using mcmc random walk
+1848  num accepted
+92.4 % was accepted
+6
+14.156833020695334
+298
+198
+evaluate Initial w
+-7.927717786322872
+begin sampling using mcmc random walk
+1857  num accepted
+92.85 % was accepted
+7
+0.700286870901918
+298
+198
+evaluate Initial w
+-17.219137973553046
+begin sampling using mcmc random walk
+1923  num accepted
+96.15 % was accepted
+8
+-2.731168454759134
+298
+198
+evaluate Initial w
+-32.7965649793305
+begin sampling using mcmc random walk
+1883  num accepted
+94.15 % was accepted
+9
+2.043329073715169
+298
+198
+evaluate Initial w
+-0.7801194585607186
+begin sampling using mcmc random walk
+1928  num accepted
+96.4 % was accepted
+10
+0.8608453753057783
+298
+198
+evaluate Initial w
+-4.899059461284001
+begin sampling using mcmc random walk
+1949  num accepted
+97.45 % was accepted
+11
+-3.474034394387691
+298
+198
+evaluate Initial w
+-3.1083390603079533
+begin sampling using mcmc random walk
+1911  num accepted
+95.55 % was accepted
+12
+-1.051752808367214
+298
+198
+evaluate Initial w
+1.1060578145369155
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+13
+0.4390689785964565
+298
+198
+evaluate Initial w
+-1.1852352574499476
+begin sampling using mcmc random walk
+1904  num accepted
+95.2 % was accepted
+14
+0.7519661910080652
+298
+198
+evaluate Initial w
+-1.9610362747195862
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+15
+0.03133590123901751
+298
+198
+evaluate Initial w
+-0.43315831532125026
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+16
+0.6183437248560308
+298
+198
+evaluate Initial w
+-1.6208968483191906
+begin sampling using mcmc random walk
+1946  num accepted
+97.3 % was accepted
+17
+0.08678355371052869
+298
+198
+evaluate Initial w
+-3.7502396328477614
+begin sampling using mcmc random walk
+1936  num accepted
+96.8 % was accepted
+18
+1.8133164289498767
+298
+198
+evaluate Initial w
+-4.354135742367233
+begin sampling using mcmc random walk
+1968  num accepted
+98.4 % was accepted
+19
+-5.203423335769558
+chains swapped
+300 400
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-135.6019664974479
+begin sampling using mcmc random walk
+1176  num accepted
+58.8 % was accepted
+0
+495.20804630491637
+298
+198
+evaluate Initial w
+-40.11238776133786
+begin sampling using mcmc random walk
+1594  num accepted
+79.7 % was accepted
+1
+112.70803561974135
+298
+198
+evaluate Initial w
+-12.894179038087032
+begin sampling using mcmc random walk
+1693  num accepted
+84.65 % was accepted
+2
+53.46569808900773
+298
+198
+evaluate Initial w
+-5.662198648484827
+begin sampling using mcmc random walk
+1755  num accepted
+87.75 % was accepted
+3
+34.16490422051525
+298
+198
+evaluate Initial w
+-11.875801750243278
+begin sampling using mcmc random walk
+1860  num accepted
+93.0 % was accepted
+4
+0.21824286302704446
+298
+198
+evaluate Initial w
+-13.309966188888742
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+5
+-3.3104960229956184
+298
+198
+evaluate Initial w
+-29.030693566590283
+begin sampling using mcmc random walk
+1871  num accepted
+93.55 % was accepted
+6
+5.327057983154895
+298
+198
+evaluate Initial w
+-7.354879238926146
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+7
+-5.29434242504348
+298
+198
+evaluate Initial w
+-16.152779586288855
+begin sampling using mcmc random walk
+1843  num accepted
+92.15 % was accepted
+8
+5.2497451153460215
+298
+198
+evaluate Initial w
+-32.1978686155594
+begin sampling using mcmc random walk
+1864  num accepted
+93.2 % was accepted
+9
+-0.8330371953870978
+298
+198
+evaluate Initial w
+-11.534457383320403
+begin sampling using mcmc random walk
+1899  num accepted
+94.95 % was accepted
+10
+4.285749601366541
+298
+198
+evaluate Initial w
+-5.875110827668119
+begin sampling using mcmc random walk
+1918  num accepted
+95.9 % was accepted
+11
+0.5462693993984071
+298
+198
+evaluate Initial w
+0.17056819534787415
+begin sampling using mcmc random walk
+1913  num accepted
+95.65 % was accepted
+12
+4.850134630244215
+298
+198
+evaluate Initial w
+-0.8022180478277319
+begin sampling using mcmc random walk
+1888  num accepted
+94.4 % was accepted
+13
+-1.2508617192634934
+298
+198
+evaluate Initial w
+-1.0901770647237303
+begin sampling using mcmc random walk
+1946  num accepted
+97.3 % was accepted
+14
+-2.145105168701833
+298
+198
+evaluate Initial w
+-19.725697770847543
+begin sampling using mcmc random walk
+1909  num accepted
+95.45 % was accepted
+15
+-1.1344091592218148
+298
+198
+evaluate Initial w
+-8.068175570911668
+begin sampling using mcmc random walk
+1909  num accepted
+95.45 % was accepted
+16
+-0.8788211838035568
+298
+198
+evaluate Initial w
+-7.633357164752424
+begin sampling using mcmc random walk
+1928  num accepted
+96.4 % was accepted
+17
+-2.5962784160049055
+298
+198
+evaluate Initial w
+-2.4347254162974457
+begin sampling using mcmc random walk
+1921  num accepted
+96.05 % was accepted
+18
+-2.2145391528463407
+298
+198
+evaluate Initial w
+-12.259716606903337
+begin sampling using mcmc random walk
+1888  num accepted
+94.4 % was accepted
+19
+0.49400332132781205
+chains swapped
+chains swapped
+400 500
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-21.953631838764423
+begin sampling using mcmc random walk
+976  num accepted
+48.8 % was accepted
+0
+538.8919775015011
+298
+198
+evaluate Initial w
+-27.249195530853775
+begin sampling using mcmc random walk
+1651  num accepted
+82.55 % was accepted
+1
+62.2187009249145
+298
+198
+evaluate Initial w
+1.4178422690500057
+begin sampling using mcmc random walk
+1772  num accepted
+88.6 % was accepted
+2
+22.74760906282471
+298
+198
+evaluate Initial w
+-7.836925539561254
+begin sampling using mcmc random walk
+1809  num accepted
+90.45 % was accepted
+3
+14.754395563312139
+298
+198
+evaluate Initial w
+-14.525783653429688
+begin sampling using mcmc random walk
+1883  num accepted
+94.15 % was accepted
+4
+3.823391891868038
+298
+198
+evaluate Initial w
+-2.256944922806251
+begin sampling using mcmc random walk
+1838  num accepted
+91.9 % was accepted
+5
+-3.632024338606654
+298
+198
+evaluate Initial w
+-7.915983150028955
+begin sampling using mcmc random walk
+1849  num accepted
+92.45 % was accepted
+6
+6.586753612996233
+298
+198
+evaluate Initial w
+-16.16951769830005
+begin sampling using mcmc random walk
+1841  num accepted
+92.05 % was accepted
+7
+5.331668646531596
+298
+198
+evaluate Initial w
+-24.20214428093724
+begin sampling using mcmc random walk
+1919  num accepted
+95.95 % was accepted
+8
+-3.1131187029207155
+298
+198
+evaluate Initial w
+-9.332513606454135
+begin sampling using mcmc random walk
+1881  num accepted
+94.05 % was accepted
+9
+1.7398638374000859
+298
+198
+evaluate Initial w
+-2.4198722350187842
+begin sampling using mcmc random walk
+1892  num accepted
+94.6 % was accepted
+10
+0.476246123205401
+298
+198
+evaluate Initial w
+-0.600346353020075
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+11
+0.8985802709589149
+298
+198
+evaluate Initial w
+-14.083375595187796
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+12
+-2.0915328708611
+298
+198
+evaluate Initial w
+-11.282550628122014
+begin sampling using mcmc random walk
+1880  num accepted
+94.0 % was accepted
+13
+2.3249243901934302
+298
+198
+evaluate Initial w
+-23.084119816835784
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+14
+-7.79211486162211
+298
+198
+evaluate Initial w
+0.155699891549407
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+15
+4.410062030056823
+298
+198
+evaluate Initial w
+0.51035668404656
+begin sampling using mcmc random walk
+1916  num accepted
+95.8 % was accepted
+16
+-1.6660576702308665
+298
+198
+evaluate Initial w
+-3.80923452764179
+begin sampling using mcmc random walk
+1928  num accepted
+96.4 % was accepted
+17
+-0.8100323206865909
+298
+198
+evaluate Initial w
+-18.589438270477697
+begin sampling using mcmc random walk
+1888  num accepted
+94.4 % was accepted
+18
+-0.7238702072143682
+298
+198
+evaluate Initial w
+-9.23049720156048
+begin sampling using mcmc random walk
+1917  num accepted
+95.85 % was accepted
+19
+-5.157146137704663
+chains swapped
+chains swapped
+500 600
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-313.4906128338662
+begin sampling using mcmc random walk
+1114  num accepted
+55.7 % was accepted
+0
+476.0142987027986
+298
+198
+evaluate Initial w
+4.940932182181901
+begin sampling using mcmc random walk
+1591  num accepted
+79.55 % was accepted
+1
+107.09725671367507
+298
+198
+evaluate Initial w
+-3.9922619270520894
+begin sampling using mcmc random walk
+1749  num accepted
+87.45 % was accepted
+2
+31.67699140607298
+298
+198
+evaluate Initial w
+-4.763417793309918
+begin sampling using mcmc random walk
+1723  num accepted
+86.15 % was accepted
+3
+42.08094205537724
+298
+198
+evaluate Initial w
+-32.00388457760795
+begin sampling using mcmc random walk
+1814  num accepted
+90.7 % was accepted
+4
+15.785666072669317
+298
+198
+evaluate Initial w
+-22.897185888476734
+begin sampling using mcmc random walk
+1840  num accepted
+92.0 % was accepted
+5
+12.110052876201989
+298
+198
+evaluate Initial w
+-21.012384868953415
+begin sampling using mcmc random walk
+1879  num accepted
+93.95 % was accepted
+6
+2.918457667783792
+298
+198
+evaluate Initial w
+-10.116696071648455
+begin sampling using mcmc random walk
+1879  num accepted
+93.95 % was accepted
+7
+6.249943580350583
+298
+198
+evaluate Initial w
+-10.82547442043262
+begin sampling using mcmc random walk
+1871  num accepted
+93.55 % was accepted
+8
+4.309059313217905
+298
+198
+evaluate Initial w
+-3.2617625822284615
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+9
+-5.70253439954127
+298
+198
+evaluate Initial w
+-29.865910330632687
+begin sampling using mcmc random walk
+1852  num accepted
+92.6 % was accepted
+10
+0.8344389139087177
+298
+198
+evaluate Initial w
+-3.8926528731595686
+begin sampling using mcmc random walk
+1911  num accepted
+95.55 % was accepted
+11
+-5.88136224354109
+298
+198
+evaluate Initial w
+-2.0866220380802925
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+12
+0.5186647349879361
+298
+198
+evaluate Initial w
+-2.3173368794731335
+begin sampling using mcmc random walk
+1926  num accepted
+96.3 % was accepted
+13
+-1.5804480707780177
+298
+198
+evaluate Initial w
+-2.2747303967043484
+begin sampling using mcmc random walk
+1953  num accepted
+97.65 % was accepted
+14
+-4.2355853271595265
+298
+198
+evaluate Initial w
+-1.5351524814421078
+begin sampling using mcmc random walk
+1938  num accepted
+96.9 % was accepted
+15
+-3.286127439609179
+298
+198
+evaluate Initial w
+-11.19857428555597
+begin sampling using mcmc random walk
+1927  num accepted
+96.35 % was accepted
+16
+-2.4385987826504647
+298
+198
+evaluate Initial w
+-1.2203476840141956
+begin sampling using mcmc random walk
+1935  num accepted
+96.75 % was accepted
+17
+1.7351763807668785
+298
+198
+evaluate Initial w
+-2.304577207874811
+begin sampling using mcmc random walk
+1953  num accepted
+97.65 % was accepted
+18
+0.028579157083450418
+298
+198
+evaluate Initial w
+-1.7632656974043732
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+19
+0.8894815557377089
+chains swapped
+600 700
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-126.12427156446219
+begin sampling using mcmc random walk
+1169  num accepted
+58.45 % was accepted
+0
+442.7444679091629
+298
+198
+evaluate Initial w
+-16.446844857952744
+begin sampling using mcmc random walk
+1660  num accepted
+83.0 % was accepted
+1
+93.08127189220247
+298
+198
+evaluate Initial w
+-23.821537021393162
+begin sampling using mcmc random walk
+1814  num accepted
+90.7 % was accepted
+2
+21.48623199233288
+298
+198
+evaluate Initial w
+-77.90955199351347
+begin sampling using mcmc random walk
+1772  num accepted
+88.6 % was accepted
+3
+15.51854048865146
+298
+198
+evaluate Initial w
+-18.46260944704039
+begin sampling using mcmc random walk
+1811  num accepted
+90.55 % was accepted
+4
+-0.8668343170494434
+298
+198
+evaluate Initial w
+-36.163539152327665
+begin sampling using mcmc random walk
+1835  num accepted
+91.75 % was accepted
+5
+5.300164822606973
+298
+198
+evaluate Initial w
+-6.6247545722328365
+begin sampling using mcmc random walk
+1885  num accepted
+94.25 % was accepted
+6
+-1.3970612057400857
+298
+198
+evaluate Initial w
+-31.656590959260203
+begin sampling using mcmc random walk
+1884  num accepted
+94.2 % was accepted
+7
+-2.2250233437088665
+298
+198
+evaluate Initial w
+-12.67925643205324
+begin sampling using mcmc random walk
+1922  num accepted
+96.1 % was accepted
+8
+5.0257105484686155
+298
+198
+evaluate Initial w
+-8.839310174342334
+begin sampling using mcmc random walk
+1890  num accepted
+94.5 % was accepted
+9
+2.1037867643261086
+298
+198
+evaluate Initial w
+-4.284871638827137
+begin sampling using mcmc random walk
+1956  num accepted
+97.8 % was accepted
+10
+-3.314987043236872
+298
+198
+evaluate Initial w
+-0.6099749611402387
+begin sampling using mcmc random walk
+1913  num accepted
+95.65 % was accepted
+11
+-0.9536578873904555
+298
+198
+evaluate Initial w
+-1.3266999863285514
+begin sampling using mcmc random walk
+1912  num accepted
+95.6 % was accepted
+12
+2.466241077231886
+298
+198
+evaluate Initial w
+-7.924382930697008
+begin sampling using mcmc random walk
+1927  num accepted
+96.35 % was accepted
+13
+-2.0398046287950837
+298
+198
+evaluate Initial w
+-4.342964686097014
+begin sampling using mcmc random walk
+1931  num accepted
+96.55 % was accepted
+14
+3.766635554995438
+298
+198
+evaluate Initial w
+0.921105204155427
+begin sampling using mcmc random walk
+1883  num accepted
+94.15 % was accepted
+15
+2.663364378794921
+298
+198
+evaluate Initial w
+-1.715399481787277
+begin sampling using mcmc random walk
+1952  num accepted
+97.6 % was accepted
+16
+-0.4283284253812662
+298
+198
+evaluate Initial w
+-3.358526868465222
+begin sampling using mcmc random walk
+1943  num accepted
+97.15 % was accepted
+17
+-0.6478310447015725
+298
+198
+evaluate Initial w
+-20.743116709676386
+begin sampling using mcmc random walk
+1912  num accepted
+95.6 % was accepted
+18
+-0.02119827511905268
+298
+198
+evaluate Initial w
+-4.385334850099184
+begin sampling using mcmc random walk
+1943  num accepted
+97.15 % was accepted
+19
+-1.3386257948897762
+chains swapped
+700 800
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-354.53390935256004
+begin sampling using mcmc random walk
+1171  num accepted
+58.55 % was accepted
+0
+443.87993479727606
+298
+198
+evaluate Initial w
+-80.1545792313119
+begin sampling using mcmc random walk
+1705  num accepted
+85.25 % was accepted
+1
+14.962576739299038
+298
+198
+evaluate Initial w
+-39.38586779812151
+begin sampling using mcmc random walk
+1697  num accepted
+84.85 % was accepted
+2
+50.687665003355434
+298
+198
+evaluate Initial w
+-69.51838621187156
+begin sampling using mcmc random walk
+1804  num accepted
+90.2 % was accepted
+3
+11.474237976349166
+298
+198
+evaluate Initial w
+-5.0146359171171655
+begin sampling using mcmc random walk
+1895  num accepted
+94.75 % was accepted
+4
+1.997974539772459
+298
+198
+evaluate Initial w
+-6.657918239775264
+begin sampling using mcmc random walk
+1858  num accepted
+92.9 % was accepted
+5
+7.764024033314913
+298
+198
+evaluate Initial w
+-25.854639119564403
+begin sampling using mcmc random walk
+1824  num accepted
+91.2 % was accepted
+6
+5.720809317654689
+298
+198
+evaluate Initial w
+-8.212697328822417
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+7
+-1.6578116502669005
+298
+198
+evaluate Initial w
+-3.089445073221488
+begin sampling using mcmc random walk
+1857  num accepted
+92.85 % was accepted
+8
+9.959896335499899
+298
+198
+evaluate Initial w
+-2.402611212740242
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+9
+1.422868734095758
+298
+198
+evaluate Initial w
+-13.238023219375801
+begin sampling using mcmc random walk
+1851  num accepted
+92.55 % was accepted
+10
+9.80093591696582
+298
+198
+evaluate Initial w
+-22.67497125145667
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+11
+-4.6327989521499395
+298
+198
+evaluate Initial w
+-4.570849344442341
+begin sampling using mcmc random walk
+1919  num accepted
+95.95 % was accepted
+12
+1.8876665404621389
+298
+198
+evaluate Initial w
+-8.985943641036847
+begin sampling using mcmc random walk
+1902  num accepted
+95.1 % was accepted
+13
+-3.3541062172628306
+298
+198
+evaluate Initial w
+-0.3269026144702801
+begin sampling using mcmc random walk
+1912  num accepted
+95.6 % was accepted
+14
+-0.28746597793585166
+298
+198
+evaluate Initial w
+-23.162691702147228
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+15
+-10.186278720308993
+298
+198
+evaluate Initial w
+-4.251546791585317
+begin sampling using mcmc random walk
+1936  num accepted
+96.8 % was accepted
+16
+1.532192073874587
+298
+198
+evaluate Initial w
+-2.216205304441711
+begin sampling using mcmc random walk
+1906  num accepted
+95.3 % was accepted
+17
+2.350317868007821
+298
+198
+evaluate Initial w
+-1.6726651711554754
+begin sampling using mcmc random walk
+1967  num accepted
+98.35 % was accepted
+18
+-1.7664884877357392
+298
+198
+evaluate Initial w
+-1.4216730307552266
+begin sampling using mcmc random walk
+1966  num accepted
+98.3 % was accepted
+19
+-3.6144102009787202
+chains swapped
+chains swapped
+800 900
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-221.88133291916353
+begin sampling using mcmc random walk
+1248  num accepted
+62.4 % was accepted
+0
+428.35745839474026
+298
+198
+evaluate Initial w
+-17.26680457130858
+begin sampling using mcmc random walk
+1612  num accepted
+80.6 % was accepted
+1
+95.77058275145887
+298
+198
+evaluate Initial w
+-30.879341884989145
+begin sampling using mcmc random walk
+1756  num accepted
+87.8 % was accepted
+2
+9.24722369390123
+298
+198
+evaluate Initial w
+-22.824056956080213
+begin sampling using mcmc random walk
+1776  num accepted
+88.8 % was accepted
+3
+27.542809124305844
+298
+198
+evaluate Initial w
+-5.749578080636146
+begin sampling using mcmc random walk
+1795  num accepted
+89.75 % was accepted
+4
+11.322682605139049
+298
+198
+evaluate Initial w
+-38.17540085566918
+begin sampling using mcmc random walk
+1854  num accepted
+92.7 % was accepted
+5
+1.7052542108069169
+298
+198
+evaluate Initial w
+6.29401953047451
+begin sampling using mcmc random walk
+1796  num accepted
+89.8 % was accepted
+6
+11.71616578244539
+298
+198
+evaluate Initial w
+-4.766969798909746
+begin sampling using mcmc random walk
+1839  num accepted
+91.95 % was accepted
+7
+0.4024918120636261
+298
+198
+evaluate Initial w
+-26.238676169060486
+begin sampling using mcmc random walk
+1862  num accepted
+93.1 % was accepted
+8
+-2.39379099191778
+298
+198
+evaluate Initial w
+-4.614633435927192
+begin sampling using mcmc random walk
+1917  num accepted
+95.85 % was accepted
+9
+-6.044719677236107
+298
+198
+evaluate Initial w
+-13.195401649634766
+begin sampling using mcmc random walk
+1878  num accepted
+93.9 % was accepted
+10
+0.9157090220444495
+298
+198
+evaluate Initial w
+-4.529070212888815
+begin sampling using mcmc random walk
+1908  num accepted
+95.4 % was accepted
+11
+0.06414662921278869
+298
+198
+evaluate Initial w
+-2.507679704199036
+begin sampling using mcmc random walk
+1906  num accepted
+95.3 % was accepted
+12
+-1.1431628916773582
+298
+198
+evaluate Initial w
+-5.9837494229794075
+begin sampling using mcmc random walk
+1922  num accepted
+96.1 % was accepted
+13
+-4.3762619640672415
+298
+198
+evaluate Initial w
+-0.20808253795241716
+begin sampling using mcmc random walk
+1931  num accepted
+96.55 % was accepted
+14
+-0.5675792551664788
+298
+198
+evaluate Initial w
+-4.132519843148192
+begin sampling using mcmc random walk
+1941  num accepted
+97.05 % was accepted
+15
+-3.013911535992017
+298
+198
+evaluate Initial w
+-6.401217398246706
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+16
+0.3381254894923865
+298
+198
+evaluate Initial w
+-0.8046737616801304
+begin sampling using mcmc random walk
+1929  num accepted
+96.45 % was accepted
+17
+-0.39557716515249747
+298
+198
+evaluate Initial w
+-16.83596641019544
+begin sampling using mcmc random walk
+1913  num accepted
+95.65 % was accepted
+18
+-3.9981084689277
+298
+198
+evaluate Initial w
+-2.8091227672006855
+begin sampling using mcmc random walk
+1957  num accepted
+97.85 % was accepted
+19
+-2.045816287300231
+chains swapped
+900 1000
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-51.41283752484279
+begin sampling using mcmc random walk
+1058  num accepted
+52.9 % was accepted
+0
+537.5032955081612
+298
+198
+evaluate Initial w
+-83.95224944197713
+begin sampling using mcmc random walk
+1651  num accepted
+82.55 % was accepted
+1
+77.41412486251305
+298
+198
+evaluate Initial w
+-77.68612652243561
+begin sampling using mcmc random walk
+1716  num accepted
+85.8 % was accepted
+2
+40.58221008813499
+298
+198
+evaluate Initial w
+-13.915218074689983
+begin sampling using mcmc random walk
+1818  num accepted
+90.9 % was accepted
+3
+10.16702249151832
+298
+198
+evaluate Initial w
+-9.370273222949468
+begin sampling using mcmc random walk
+1774  num accepted
+88.7 % was accepted
+4
+26.902950664479363
+298
+198
+evaluate Initial w
+-9.062893093017939
+begin sampling using mcmc random walk
+1847  num accepted
+92.35 % was accepted
+5
+-3.001311492972833
+298
+198
+evaluate Initial w
+-0.6124436960421317
+begin sampling using mcmc random walk
+1829  num accepted
+91.45 % was accepted
+6
+14.981770888252111
+298
+198
+evaluate Initial w
+-12.394849269731871
+begin sampling using mcmc random walk
+1899  num accepted
+94.95 % was accepted
+7
+2.2857327281508937
+298
+198
+evaluate Initial w
+-2.224576091159347
+begin sampling using mcmc random walk
+1905  num accepted
+95.25 % was accepted
+8
+2.460869042817531
+298
+198
+evaluate Initial w
+-0.44158129459333634
+begin sampling using mcmc random walk
+1889  num accepted
+94.45 % was accepted
+9
+5.745699027123225
+298
+198
+evaluate Initial w
+0.06239572967177563
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+10
+-0.04589280459149635
+298
+198
+evaluate Initial w
+-2.8301567982322817
+begin sampling using mcmc random walk
+1933  num accepted
+96.65 % was accepted
+11
+-2.4330743103619716
+298
+198
+evaluate Initial w
+-21.104674341757878
+begin sampling using mcmc random walk
+1879  num accepted
+93.95 % was accepted
+12
+3.164955739691357
+298
+198
+evaluate Initial w
+-4.137134014556141
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+13
+-0.48698009262406233
+298
+198
+evaluate Initial w
+-8.249305547763516
+begin sampling using mcmc random walk
+1947  num accepted
+97.35 % was accepted
+14
+-5.699317816091615
+298
+198
+evaluate Initial w
+-1.45644323998505
+begin sampling using mcmc random walk
+1922  num accepted
+96.1 % was accepted
+15
+3.2716920704383825
+298
+198
+evaluate Initial w
+-5.024370720318147
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+16
+-2.7522941157993044
+298
+198
+evaluate Initial w
+-1.5764179809658192
+begin sampling using mcmc random walk
+1917  num accepted
+95.85 % was accepted
+17
+2.052987334109517
+298
+198
+evaluate Initial w
+-1.5907896041435805
+begin sampling using mcmc random walk
+1932  num accepted
+96.6 % was accepted
+18
+0.9815805859479534
+298
+198
+evaluate Initial w
+-2.092386809667493
+begin sampling using mcmc random walk
+1943  num accepted
+97.15 % was accepted
+19
+0.6717801990694404
+chains swapped
+1000 1100
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-116.39368641036219
+begin sampling using mcmc random walk
+1213  num accepted
+60.65 % was accepted
+0
+485.4580175578518
+298
+198
+evaluate Initial w
+-42.900142595680805
+begin sampling using mcmc random walk
+1714  num accepted
+85.7 % was accepted
+1
+13.016516261664602
+298
+198
+evaluate Initial w
+-33.760579043958884
+begin sampling using mcmc random walk
+1759  num accepted
+87.95 % was accepted
+2
+28.392724945895527
+298
+198
+evaluate Initial w
+13.558246541411888
+begin sampling using mcmc random walk
+1736  num accepted
+86.8 % was accepted
+3
+28.414901122832156
+298
+198
+evaluate Initial w
+-20.41802012342338
+begin sampling using mcmc random walk
+1826  num accepted
+91.3 % was accepted
+4
+13.710368776123362
+298
+198
+evaluate Initial w
+0.4510803346581828
+begin sampling using mcmc random walk
+1818  num accepted
+90.9 % was accepted
+5
+13.249297004131472
+298
+198
+evaluate Initial w
+-19.722545383989324
+begin sampling using mcmc random walk
+1818  num accepted
+90.9 % was accepted
+6
+6.564762918746409
+298
+198
+evaluate Initial w
+-12.999250760468433
+begin sampling using mcmc random walk
+1841  num accepted
+92.05 % was accepted
+7
+0.39377838106588553
+298
+198
+evaluate Initial w
+1.3536287744075082
+begin sampling using mcmc random walk
+1894  num accepted
+94.7 % was accepted
+8
+3.908931836372202
+298
+198
+evaluate Initial w
+-1.7561254497979415
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+9
+1.2383087261461585
+298
+198
+evaluate Initial w
+-5.9074177875190115
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+10
+2.3202839545135108
+298
+198
+evaluate Initial w
+-10.040999244797224
+begin sampling using mcmc random walk
+1916  num accepted
+95.8 % was accepted
+11
+-1.8522783313849396
+298
+198
+evaluate Initial w
+-1.9173325139860586
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+12
+-3.50428458535094
+298
+198
+evaluate Initial w
+-2.6863051886244174
+begin sampling using mcmc random walk
+1932  num accepted
+96.6 % was accepted
+13
+-2.7178387881562927
+298
+198
+evaluate Initial w
+1.467651923046038
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+14
+5.35442044458242
+298
+198
+evaluate Initial w
+-3.611659699790941
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+15
+0.5445910493549211
+298
+198
+evaluate Initial w
+-4.676612205630766
+begin sampling using mcmc random walk
+1940  num accepted
+97.0 % was accepted
+16
+-2.485945347917722
+298
+198
+evaluate Initial w
+-5.8190477289445175
+begin sampling using mcmc random walk
+1918  num accepted
+95.9 % was accepted
+17
+-1.3721268321147013
+298
+198
+evaluate Initial w
+-5.048047251986699
+begin sampling using mcmc random walk
+1919  num accepted
+95.95 % was accepted
+18
+-0.8450704725738823
+298
+198
+evaluate Initial w
+0.17120999198378153
+begin sampling using mcmc random walk
+1927  num accepted
+96.35 % was accepted
+19
+-0.3131612085236038
+chains swapped
+1100 1200
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-58.651358520908104
+begin sampling using mcmc random walk
+1024  num accepted
+51.2 % was accepted
+0
+528.9038138436309
+298
+198
+evaluate Initial w
+-31.168662673602828
+begin sampling using mcmc random walk
+1609  num accepted
+80.45 % was accepted
+1
+110.51803984900059
+298
+198
+evaluate Initial w
+-14.609451514460773
+begin sampling using mcmc random walk
+1795  num accepted
+89.75 % was accepted
+2
+16.89238651051074
+298
+198
+evaluate Initial w
+-24.06936835510594
+begin sampling using mcmc random walk
+1818  num accepted
+90.9 % was accepted
+3
+5.707170194975911
+298
+198
+evaluate Initial w
+-25.1178990840252
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+4
+-4.26919557367028
+298
+198
+evaluate Initial w
+-2.9815810522321176
+begin sampling using mcmc random walk
+1873  num accepted
+93.65 % was accepted
+5
+1.912347474468605
+298
+198
+evaluate Initial w
+-55.107023034979136
+begin sampling using mcmc random walk
+1832  num accepted
+91.6 % was accepted
+6
+-4.113993055118442
+298
+198
+evaluate Initial w
+-7.394436759322904
+begin sampling using mcmc random walk
+1899  num accepted
+94.95 % was accepted
+7
+2.1718272604157267
+298
+198
+evaluate Initial w
+-4.683901929584428
+begin sampling using mcmc random walk
+1920  num accepted
+96.0 % was accepted
+8
+-2.1421531263069555
+298
+198
+evaluate Initial w
+0.14405724415671303
+begin sampling using mcmc random walk
+1905  num accepted
+95.25 % was accepted
+9
+7.087222053295498
+298
+198
+evaluate Initial w
+-3.5361199511671195
+begin sampling using mcmc random walk
+1896  num accepted
+94.8 % was accepted
+10
+-5.6386499653414175
+298
+198
+evaluate Initial w
+-11.218864585161457
+begin sampling using mcmc random walk
+1892  num accepted
+94.6 % was accepted
+11
+-1.2397718548305294
+298
+198
+evaluate Initial w
+-15.674686772832517
+begin sampling using mcmc random walk
+1872  num accepted
+93.6 % was accepted
+12
+-0.8849476407965865
+298
+198
+evaluate Initial w
+-1.5038646623955374
+begin sampling using mcmc random walk
+1930  num accepted
+96.5 % was accepted
+13
+0.6891933979364421
+298
+198
+evaluate Initial w
+0.24379215841607926
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+14
+-0.7158475678401376
+298
+198
+evaluate Initial w
+-3.9165683306952985
+begin sampling using mcmc random walk
+1917  num accepted
+95.85 % was accepted
+15
+1.123685644495152
+298
+198
+evaluate Initial w
+-2.113126867728246
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+16
+0.2690525263443617
+298
+198
+evaluate Initial w
+-3.389368004930876
+begin sampling using mcmc random walk
+1941  num accepted
+97.05 % was accepted
+17
+-2.2340033850293346
+298
+198
+evaluate Initial w
+1.465113242301221
+begin sampling using mcmc random walk
+1927  num accepted
+96.35 % was accepted
+18
+2.143639084422066
+298
+198
+evaluate Initial w
+-1.3567529334088932
+begin sampling using mcmc random walk
+1950  num accepted
+97.5 % was accepted
+19
+1.131576529465066
+chains swapped
+chains swapped
+1200 1300
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-234.4046262293342
+begin sampling using mcmc random walk
+1103  num accepted
+55.15 % was accepted
+0
+491.7352345471512
+298
+198
+evaluate Initial w
+-23.826444253251402
+begin sampling using mcmc random walk
+1590  num accepted
+79.5 % was accepted
+1
+81.33703369378814
+298
+198
+evaluate Initial w
+-0.3780780247174844
+begin sampling using mcmc random walk
+1728  num accepted
+86.4 % was accepted
+2
+48.150732110753644
+298
+198
+evaluate Initial w
+-73.88946347369975
+begin sampling using mcmc random walk
+1771  num accepted
+88.55 % was accepted
+3
+6.134236357541854
+298
+198
+evaluate Initial w
+-21.4213027489781
+begin sampling using mcmc random walk
+1825  num accepted
+91.25 % was accepted
+4
+6.399205553482962
+298
+198
+evaluate Initial w
+-8.072889202611234
+begin sampling using mcmc random walk
+1877  num accepted
+93.85 % was accepted
+5
+11.338876295208495
+298
+198
+evaluate Initial w
+-4.259810107307011
+begin sampling using mcmc random walk
+1845  num accepted
+92.25 % was accepted
+6
+6.786374144094771
+298
+198
+evaluate Initial w
+-1.5111316629541183
+begin sampling using mcmc random walk
+1930  num accepted
+96.5 % was accepted
+7
+-0.42028764448336065
+298
+198
+evaluate Initial w
+-7.209881940633911
+begin sampling using mcmc random walk
+1875  num accepted
+93.75 % was accepted
+8
+4.667895349434128
+298
+198
+evaluate Initial w
+-1.4297052167055135
+begin sampling using mcmc random walk
+1896  num accepted
+94.8 % was accepted
+9
+2.606273470833983
+298
+198
+evaluate Initial w
+-9.60860596305882
+begin sampling using mcmc random walk
+1898  num accepted
+94.9 % was accepted
+10
+-2.5347837544455456
+298
+198
+evaluate Initial w
+-0.27615690706732154
+begin sampling using mcmc random walk
+1853  num accepted
+92.65 % was accepted
+11
+-9.179595149247744
+298
+198
+evaluate Initial w
+-13.003976976127726
+begin sampling using mcmc random walk
+1930  num accepted
+96.5 % was accepted
+12
+-2.759993010852222
+298
+198
+evaluate Initial w
+-12.063839238814806
+begin sampling using mcmc random walk
+1921  num accepted
+96.05 % was accepted
+13
+-2.3466382967266686
+298
+198
+evaluate Initial w
+-2.7578181203071526
+begin sampling using mcmc random walk
+1940  num accepted
+97.0 % was accepted
+14
+-4.292987496463823
+298
+198
+evaluate Initial w
+0.15996154745903432
+begin sampling using mcmc random walk
+1922  num accepted
+96.1 % was accepted
+15
+0.6930461084598895
+298
+198
+evaluate Initial w
+-2.5452157449956174
+begin sampling using mcmc random walk
+1936  num accepted
+96.8 % was accepted
+16
+-0.806211982645411
+298
+198
+evaluate Initial w
+-1.5335525928274925
+begin sampling using mcmc random walk
+1949  num accepted
+97.45 % was accepted
+17
+-1.052734611624499
+298
+198
+evaluate Initial w
+-2.0304298716274314
+begin sampling using mcmc random walk
+1911  num accepted
+95.55 % was accepted
+18
+-0.6810803281595615
+298
+198
+evaluate Initial w
+-5.956403213191801
+begin sampling using mcmc random walk
+1944  num accepted
+97.2 % was accepted
+19
+-4.043327701726307
+chains swapped
+1300 1400
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-382.42838655023013
+begin sampling using mcmc random walk
+1207  num accepted
+60.35 % was accepted
+0
+464.97904659526125
+298
+198
+evaluate Initial w
+-46.31731298265325
+begin sampling using mcmc random walk
+1555  num accepted
+77.75 % was accepted
+1
+109.1350776752368
+298
+198
+evaluate Initial w
+-115.82350635847823
+begin sampling using mcmc random walk
+1737  num accepted
+86.85 % was accepted
+2
+16.087721074208464
+298
+198
+evaluate Initial w
+-33.20042033290033
+begin sampling using mcmc random walk
+1815  num accepted
+90.75 % was accepted
+3
+-2.4798831721287136
+298
+198
+evaluate Initial w
+-17.716985727789872
+begin sampling using mcmc random walk
+1858  num accepted
+92.9 % was accepted
+4
+8.950553015227284
+298
+198
+evaluate Initial w
+-54.83245338147082
+begin sampling using mcmc random walk
+1857  num accepted
+92.85 % was accepted
+5
+-2.369780432733036
+298
+198
+evaluate Initial w
+-1.5325641366970515
+begin sampling using mcmc random walk
+1883  num accepted
+94.15 % was accepted
+6
+2.961835324070265
+298
+198
+evaluate Initial w
+-3.7376771460169755
+begin sampling using mcmc random walk
+1875  num accepted
+93.75 % was accepted
+7
+4.626809337801105
+298
+198
+evaluate Initial w
+0.1336078665214515
+begin sampling using mcmc random walk
+1893  num accepted
+94.65 % was accepted
+8
+4.742300664659843
+298
+198
+evaluate Initial w
+-29.73526731460015
+begin sampling using mcmc random walk
+1907  num accepted
+95.35 % was accepted
+9
+-1.3613539979945526
+298
+198
+evaluate Initial w
+-0.2476589343243055
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+10
+3.6385095638239155
+298
+198
+evaluate Initial w
+-11.398377226543428
+begin sampling using mcmc random walk
+1900  num accepted
+95.0 % was accepted
+11
+-1.0059206384884345
+298
+198
+evaluate Initial w
+1.2334374345706682
+begin sampling using mcmc random walk
+1884  num accepted
+94.2 % was accepted
+12
+2.9143233686443772
+298
+198
+evaluate Initial w
+-6.998484669510862
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+13
+3.0724545842914717
+298
+198
+evaluate Initial w
+-15.343919616819287
+begin sampling using mcmc random walk
+1943  num accepted
+97.15 % was accepted
+14
+-1.2247912369354326
+298
+198
+evaluate Initial w
+-4.533315602436149
+begin sampling using mcmc random walk
+1855  num accepted
+92.75 % was accepted
+15
+1.887415421087246
+298
+198
+evaluate Initial w
+-0.22360419428602146
+begin sampling using mcmc random walk
+1927  num accepted
+96.35 % was accepted
+16
+2.5743559387062964
+298
+198
+evaluate Initial w
+-3.2548649419829148
+begin sampling using mcmc random walk
+1935  num accepted
+96.75 % was accepted
+17
+0.5149736473488671
+298
+198
+evaluate Initial w
+-16.702540212571105
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+18
+-6.421063392727102
+298
+198
+evaluate Initial w
+-3.9534038773995186
+begin sampling using mcmc random walk
+1947  num accepted
+97.35 % was accepted
+19
+-1.7822236078361542
+chains swapped
+chains swapped
+1400 1500
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-451.39948144931503
+begin sampling using mcmc random walk
+1079  num accepted
+53.95 % was accepted
+0
+514.6017172519882
+298
+198
+evaluate Initial w
+-61.97476606397871
+begin sampling using mcmc random walk
+1604  num accepted
+80.2 % was accepted
+1
+106.99205385545379
+298
+198
+evaluate Initial w
+-11.71513831285649
+begin sampling using mcmc random walk
+1756  num accepted
+87.8 % was accepted
+2
+43.40494867596931
+298
+198
+evaluate Initial w
+-5.889368323130914
+begin sampling using mcmc random walk
+1800  num accepted
+90.0 % was accepted
+3
+16.02251795159921
+298
+198
+evaluate Initial w
+-34.33855109152773
+begin sampling using mcmc random walk
+1830  num accepted
+91.5 % was accepted
+4
+8.480679755690932
+298
+198
+evaluate Initial w
+-41.89653565223155
+begin sampling using mcmc random walk
+1838  num accepted
+91.9 % was accepted
+5
+4.994188544851338
+298
+198
+evaluate Initial w
+-13.556425256516746
+begin sampling using mcmc random walk
+1826  num accepted
+91.3 % was accepted
+6
+11.28472486747791
+298
+198
+evaluate Initial w
+-24.754981604429318
+begin sampling using mcmc random walk
+1876  num accepted
+93.8 % was accepted
+7
+0.4006681433999144
+298
+198
+evaluate Initial w
+-7.468242970209599
+begin sampling using mcmc random walk
+1901  num accepted
+95.05 % was accepted
+8
+0.0997599230630418
+298
+198
+evaluate Initial w
+-28.993546309344463
+begin sampling using mcmc random walk
+1875  num accepted
+93.75 % was accepted
+9
+1.0741066862348372
+298
+198
+evaluate Initial w
+-18.69449714871966
+begin sampling using mcmc random walk
+1836  num accepted
+91.8 % was accepted
+10
+1.3886195472288454
+298
+198
+evaluate Initial w
+-3.7558028932073135
+begin sampling using mcmc random walk
+1918  num accepted
+95.9 % was accepted
+11
+-2.0274991718512645
+298
+198
+evaluate Initial w
+-9.257626315101227
+begin sampling using mcmc random walk
+1864  num accepted
+93.2 % was accepted
+12
+3.2114668139186198
+298
+198
+evaluate Initial w
+-1.9514378751563664
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+13
+1.742821928476925
+298
+198
+evaluate Initial w
+-1.1366135544219997
+begin sampling using mcmc random walk
+1953  num accepted
+97.65 % was accepted
+14
+0.13951814388912054
+298
+198
+evaluate Initial w
+-6.579938207330958
+begin sampling using mcmc random walk
+1952  num accepted
+97.6 % was accepted
+15
+-2.4353452181716215
+298
+198
+evaluate Initial w
+-1.6926459763115926
+begin sampling using mcmc random walk
+1926  num accepted
+96.3 % was accepted
+16
+5.713523670564272
+298
+198
+evaluate Initial w
+-6.797648598572568
+begin sampling using mcmc random walk
+1905  num accepted
+95.25 % was accepted
+17
+-0.5591730681614139
+298
+198
+evaluate Initial w
+-14.940812340198281
+begin sampling using mcmc random walk
+1906  num accepted
+95.3 % was accepted
+18
+-0.04557603325310174
+298
+198
+evaluate Initial w
+-1.2050968869758372
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+19
+-3.1882914165642764
+chains swapped
+1500 1600
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-204.80766242641886
+begin sampling using mcmc random walk
+1115  num accepted
+55.75 % was accepted
+0
+461.4252765860999
+298
+198
+evaluate Initial w
+-262.0671735355486
+begin sampling using mcmc random walk
+1808  num accepted
+90.4 % was accepted
+1
+-88.39036775072658
+298
+198
+evaluate Initial w
+-73.52818087642275
+begin sampling using mcmc random walk
+1746  num accepted
+87.3 % was accepted
+2
+27.895181957863446
+298
+198
+evaluate Initial w
+-39.456357167014254
+begin sampling using mcmc random walk
+1771  num accepted
+88.55 % was accepted
+3
+8.237679401866393
+298
+198
+evaluate Initial w
+-6.1640119176579296
+begin sampling using mcmc random walk
+1837  num accepted
+91.85 % was accepted
+4
+9.095207255887448
+298
+198
+evaluate Initial w
+-50.039512240699366
+begin sampling using mcmc random walk
+1801  num accepted
+90.05 % was accepted
+5
+-1.2961941972138165
+298
+198
+evaluate Initial w
+-6.981668517124211
+begin sampling using mcmc random walk
+1856  num accepted
+92.8 % was accepted
+6
+3.4311777947227924
+298
+198
+evaluate Initial w
+-7.20300470937577
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+7
+-3.3415439100595665
+298
+198
+evaluate Initial w
+2.6295270416122687
+begin sampling using mcmc random walk
+1877  num accepted
+93.85 % was accepted
+8
+8.3220723645614
+298
+198
+evaluate Initial w
+-14.497503508217351
+begin sampling using mcmc random walk
+1885  num accepted
+94.25 % was accepted
+9
+10.123896702676541
+298
+198
+evaluate Initial w
+-27.514158295877987
+begin sampling using mcmc random walk
+1903  num accepted
+95.15 % was accepted
+10
+-3.923357264971102
+298
+198
+evaluate Initial w
+-6.575065744597276
+begin sampling using mcmc random walk
+1904  num accepted
+95.2 % was accepted
+11
+-1.193771181607361
+298
+198
+evaluate Initial w
+-0.8497921484563274
+begin sampling using mcmc random walk
+1936  num accepted
+96.8 % was accepted
+12
+-2.865351469142087
+298
+198
+evaluate Initial w
+-11.742194162002683
+begin sampling using mcmc random walk
+1895  num accepted
+94.75 % was accepted
+13
+-1.116712661900839
+298
+198
+evaluate Initial w
+-16.5301963677306
+begin sampling using mcmc random walk
+1929  num accepted
+96.45 % was accepted
+14
+-2.379004434530592
+298
+198
+evaluate Initial w
+-4.205002373463128
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+15
+1.3805517951086574
+298
+198
+evaluate Initial w
+-15.332092928173536
+begin sampling using mcmc random walk
+1905  num accepted
+95.25 % was accepted
+16
+-0.9449425404342171
+298
+198
+evaluate Initial w
+-15.349532835726745
+begin sampling using mcmc random walk
+1881  num accepted
+94.05 % was accepted
+17
+2.5429430890019393
+298
+198
+evaluate Initial w
+-2.7707143126632974
+begin sampling using mcmc random walk
+1921  num accepted
+96.05 % was accepted
+18
+-1.2547082664559233
+298
+198
+evaluate Initial w
+-2.218541130953525
+begin sampling using mcmc random walk
+1940  num accepted
+97.0 % was accepted
+19
+-1.6968796562787176
+1600 1700
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-38.37742218166215
+begin sampling using mcmc random walk
+1139  num accepted
+56.95 % was accepted
+0
+530.1256695247819
+298
+198
+evaluate Initial w
+-12.643154301797416
+begin sampling using mcmc random walk
+1675  num accepted
+83.75 % was accepted
+1
+87.4510637903585
+298
+198
+evaluate Initial w
+-15.685113033660038
+begin sampling using mcmc random walk
+1762  num accepted
+88.1 % was accepted
+2
+29.1683628426782
+298
+198
+evaluate Initial w
+-71.32315597830272
+begin sampling using mcmc random walk
+1790  num accepted
+89.5 % was accepted
+3
+10.373200371055812
+298
+198
+evaluate Initial w
+-21.198599575201612
+begin sampling using mcmc random walk
+1855  num accepted
+92.75 % was accepted
+4
+5.531341358908219
+298
+198
+evaluate Initial w
+-16.126543091056362
+begin sampling using mcmc random walk
+1809  num accepted
+90.45 % was accepted
+5
+10.558888662246968
+298
+198
+evaluate Initial w
+-2.8292141347497903
+begin sampling using mcmc random walk
+1843  num accepted
+92.15 % was accepted
+6
+2.915696006263957
+298
+198
+evaluate Initial w
+0.7835670559581694
+begin sampling using mcmc random walk
+1847  num accepted
+92.35 % was accepted
+7
+4.4466206736184235
+298
+198
+evaluate Initial w
+-5.84213997259638
+begin sampling using mcmc random walk
+1864  num accepted
+93.2 % was accepted
+8
+2.260142583478313
+298
+198
+evaluate Initial w
+-35.7286976692557
+begin sampling using mcmc random walk
+1878  num accepted
+93.9 % was accepted
+9
+1.8276899043980523
+298
+198
+evaluate Initial w
+-18.57931786810335
+begin sampling using mcmc random walk
+1891  num accepted
+94.55 % was accepted
+10
+4.277055528361845
+298
+198
+evaluate Initial w
+-5.808542769936679
+begin sampling using mcmc random walk
+1928  num accepted
+96.4 % was accepted
+11
+-1.2532444686729902
+298
+198
+evaluate Initial w
+-5.118003861580754
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+12
+-2.3050900126283134
+298
+198
+evaluate Initial w
+-2.1614236677519365
+begin sampling using mcmc random walk
+1941  num accepted
+97.05 % was accepted
+13
+-3.3728524530465758
+298
+198
+evaluate Initial w
+-18.02014916566073
+begin sampling using mcmc random walk
+1910  num accepted
+95.5 % was accepted
+14
+-0.2392191450770807
+298
+198
+evaluate Initial w
+-1.0937407379321447
+begin sampling using mcmc random walk
+1936  num accepted
+96.8 % was accepted
+15
+0.11547623033349244
+298
+198
+evaluate Initial w
+-0.15791730497855003
+begin sampling using mcmc random walk
+1917  num accepted
+95.85 % was accepted
+16
+3.672652738063448
+298
+198
+evaluate Initial w
+-9.504323820790132
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+17
+-0.48812268092423994
+298
+198
+evaluate Initial w
+-8.493076520935539
+begin sampling using mcmc random walk
+1924  num accepted
+96.2 % was accepted
+18
+0.8530888732271926
+298
+198
+evaluate Initial w
+-0.6662838497927996
+begin sampling using mcmc random walk
+1937  num accepted
+96.85 % was accepted
+19
+0.12346745608689597
+chains swapped
+1700 1800
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-148.99685075906714
+begin sampling using mcmc random walk
+1064  num accepted
+53.2 % was accepted
+0
+547.0162215852214
+298
+198
+evaluate Initial w
+-34.722712889736584
+begin sampling using mcmc random walk
+1681  num accepted
+84.05 % was accepted
+1
+86.36270969907531
+298
+198
+evaluate Initial w
+-14.883554871797246
+begin sampling using mcmc random walk
+1716  num accepted
+85.8 % was accepted
+2
+47.03581267270597
+298
+198
+evaluate Initial w
+-69.95755217802423
+begin sampling using mcmc random walk
+1795  num accepted
+89.75 % was accepted
+3
+13.122614785601629
+298
+198
+evaluate Initial w
+-4.584837784474874
+begin sampling using mcmc random walk
+1781  num accepted
+89.05 % was accepted
+4
+23.953931040874938
+298
+198
+evaluate Initial w
+-12.698632835151342
+begin sampling using mcmc random walk
+1876  num accepted
+93.8 % was accepted
+5
+1.6562461837360596
+298
+198
+evaluate Initial w
+-10.724618338816319
+begin sampling using mcmc random walk
+1881  num accepted
+94.05 % was accepted
+6
+3.1074800240319145
+298
+198
+evaluate Initial w
+-14.598518051947352
+begin sampling using mcmc random walk
+1934  num accepted
+96.7 % was accepted
+7
+-7.085209681045548
+298
+198
+evaluate Initial w
+-16.847697385219472
+begin sampling using mcmc random walk
+1860  num accepted
+93.0 % was accepted
+8
+10.326868171236201
+298
+198
+evaluate Initial w
+-6.8628502495611095
+begin sampling using mcmc random walk
+1831  num accepted
+91.55 % was accepted
+9
+2.2897935386513413
+298
+198
+evaluate Initial w
+-1.0928009312473896
+begin sampling using mcmc random walk
+1933  num accepted
+96.65 % was accepted
+10
+-2.9915407337577484
+298
+198
+evaluate Initial w
+-2.9476938322002275
+begin sampling using mcmc random walk
+1952  num accepted
+97.6 % was accepted
+11
+-4.244327199902103
+298
+198
+evaluate Initial w
+1.408945570402838
+begin sampling using mcmc random walk
+1901  num accepted
+95.05 % was accepted
+12
+2.3251576468390094
+298
+198
+evaluate Initial w
+-21.43717145416962
+begin sampling using mcmc random walk
+1857  num accepted
+92.85 % was accepted
+13
+2.7565581480096206
+298
+198
+evaluate Initial w
+-1.3268109517988607
+begin sampling using mcmc random walk
+1945  num accepted
+97.25 % was accepted
+14
+-0.8781191178156538
+298
+198
+evaluate Initial w
+-7.690154338691021
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+15
+-0.1358698812130237
+298
+198
+evaluate Initial w
+-18.73720183306397
+begin sampling using mcmc random walk
+1935  num accepted
+96.75 % was accepted
+16
+-7.747172809140838
+298
+198
+evaluate Initial w
+-8.054160794878372
+begin sampling using mcmc random walk
+1896  num accepted
+94.8 % was accepted
+17
+3.564409074338998
+298
+198
+evaluate Initial w
+-4.068065526480384
+begin sampling using mcmc random walk
+1958  num accepted
+97.9 % was accepted
+18
+-2.3429500388771247
+298
+198
+evaluate Initial w
+-5.007466859318421
+begin sampling using mcmc random walk
+1961  num accepted
+98.05 % was accepted
+19
+-1.834107154295369
+chains swapped
+chains swapped
+1800 1900
+--------------------------------------
+
+
+298
+198
+evaluate Initial w
+-7.858803728432921
+begin sampling using mcmc random walk
+1133  num accepted
+56.65 % was accepted
+0
+487.2939540885053
+298
+198
+evaluate Initial w
+-28.569046522553656
+begin sampling using mcmc random walk
+1585  num accepted
+79.25 % was accepted
+1
+112.78195851396376
+298
+198
+evaluate Initial w
+-27.295416475064304
+begin sampling using mcmc random walk
+1844  num accepted
+92.2 % was accepted
+2
+19.744965033091077
+298
+198
+evaluate Initial w
+3.36883252639896
+begin sampling using mcmc random walk
+1747  num accepted
+87.35 % was accepted
+3
+41.39182865623775
+298
+198
+evaluate Initial w
+-14.744413209890869
+begin sampling using mcmc random walk
+1826  num accepted
+91.3 % was accepted
+4
+5.269375448336688
+298
+198
+evaluate Initial w
+-3.891353818808929
+begin sampling using mcmc random walk
+1870  num accepted
+93.5 % was accepted
+5
+2.6672839296249182
+298
+198
+evaluate Initial w
+-37.708170862495685
+begin sampling using mcmc random walk
+1861  num accepted
+93.05 % was accepted
+6
+-0.5347614830626893
+298
+198
+evaluate Initial w
+1.8882355646114852
+begin sampling using mcmc random walk
+1817  num accepted
+90.85 % was accepted
+7
+13.90706772985911
+298
+198
+evaluate Initial w
+-2.0987650856936675
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+8
+1.0668478692862882
+298
+198
+evaluate Initial w
+-19.683236172602403
+begin sampling using mcmc random walk
+1853  num accepted
+92.65 % was accepted
+9
+4.924545966529409
+298
+198
+evaluate Initial w
+3.344196381838413
+begin sampling using mcmc random walk
+1876  num accepted
+93.8 % was accepted
+10
+6.009270270737677
+298
+198
+evaluate Initial w
+-21.999646916857586
+begin sampling using mcmc random walk
+1869  num accepted
+93.45 % was accepted
+11
+5.68084818948811
+298
+198
+evaluate Initial w
+-12.383803555747663
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+12
+-1.8617863773980858
+298
+198
+evaluate Initial w
+-15.291373052705172
+begin sampling using mcmc random walk
+1878  num accepted
+93.9 % was accepted
+13
+-1.7049241703170062
+298
+198
+evaluate Initial w
+-6.657911976943079
+begin sampling using mcmc random walk
+1941  num accepted
+97.05 % was accepted
+14
+-1.451082031304577
+298
+198
+evaluate Initial w
+-21.913807189959368
+begin sampling using mcmc random walk
+1914  num accepted
+95.7 % was accepted
+15
+-5.315008942880899
+298
+198
+evaluate Initial w
+-5.398794259459677
+begin sampling using mcmc random walk
+1915  num accepted
+95.75 % was accepted
+16
+-0.24074635856692045
+298
+198
+evaluate Initial w
+-5.526728474449917
+begin sampling using mcmc random walk
+1952  num accepted
+97.6 % was accepted
+17
+-0.10672105610196794
+298
+198
+evaluate Initial w
+-2.9388665475493214
+begin sampling using mcmc random walk
+1967  num accepted
+98.35 % was accepted
+18
+-3.8333528335389393
+298
+198
+evaluate Initial w
+-3.5139059215444823
+begin sampling using mcmc random walk
+1957  num accepted
+97.85 % was accepted
+19
+-0.7712969796807647
+chains swapped
+sucessfully sampled
+0.2654301974285253 0.12313598263983627 0.23548822204480166 0.14649833758254496
+No handles with labels found to put in legend.
+BP used 
+Time elapsed: 5582.81 seconds
+konark@konark-XPS-8930 ~/Parallel_Tempering $ 
+
