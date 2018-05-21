@@ -219,6 +219,8 @@ class ptReplica(multiprocessing.Process):
 		#Beginning Sampling using MCMC RANDOMWALK
 		plt.plot(x_train, y_train)
 
+		accept_list = open(self.path+'/acceptlist_'+str(self.temperature)+'.txt', "a+")
+
 		for i in range(samples - 1):
 			#GENERATING SAMPLE
 			#w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
@@ -252,8 +254,8 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal
 				eta = eta_pro
-
-				print(  self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior)
+				print (i,'accepted')
+				accept_list.write('{} {} {} {} {} {} {}\n'.format(self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
 				fxtrain_samples[i + 1,] = pred_train
@@ -262,7 +264,7 @@ class ptReplica(multiprocessing.Process):
 				rmse_test[i + 1,] = rmsetest
 				plt.plot(x_train, pred_train)
 			else:
-				print(self.temperature, 'x', i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior)
+				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = pos_w[i,]
 				pos_tau[i + 1,] = pos_tau[i,]
 				fxtrain_samples[i + 1,] = fxtrain_samples[i,]
@@ -493,10 +495,10 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 40
-		maxtemp = 50
-		swap_ratio = 0.1
-		num_chains = 1
+		NumSample = 8000
+		maxtemp = 10
+		swap_ratio = 1
+		num_chains = 4
 		burn_in = 0.1
 		swap_interval =   int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
