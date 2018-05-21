@@ -16,6 +16,8 @@ from matplotlib.collections import PatchCollection
 from scipy.stats import multivariate_normal
 from scipy.stats import norm
 
+np.random.seed(1)
+
 #REGRESSION FNN Randomwalk (Taken from R. Chandra, L. Azizi, S. Cripps, 'Bayesian neural learning via Langevin dynamicsfor chaotic time series prediction', ICONIP 2017.)
 
 class Network:
@@ -24,7 +26,6 @@ class Network:
 		self.Top = Topo  # NN topology [input, hidden, output]
 		self.TrainData = Train
 		self.TestData = Test
-		np.random.seed()
 		self.lrate = learn_rate
 
 		self.W1 = np.random.randn(self.Top[0], self.Top[1]) / np.sqrt(self.Top[0])
@@ -252,7 +253,7 @@ class ptReplica(multiprocessing.Process):
 				w = w_proposal
 				eta = eta_pro
 
-				print( naccept, i, rmsetrain, rmsetest, likelihood, self.temperature)
+				print(  self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior)
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
 				fxtrain_samples[i + 1,] = pred_train
@@ -261,6 +262,7 @@ class ptReplica(multiprocessing.Process):
 				rmse_test[i + 1,] = rmsetest
 				plt.plot(x_train, pred_train)
 			else:
+				print(self.temperature, 'x', i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior)
 				pos_w[i + 1,] = pos_w[i,]
 				pos_tau[i + 1,] = pos_tau[i,]
 				fxtrain_samples[i + 1,] = fxtrain_samples[i,]
@@ -491,10 +493,10 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 5000 
+		NumSample = 40
 		maxtemp = 50
-		swap_ratio = 0.9
-		num_chains = 2
+		swap_ratio = 0.1
+		num_chains = 1
 		burn_in = 0.1
 		swap_interval =   int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()

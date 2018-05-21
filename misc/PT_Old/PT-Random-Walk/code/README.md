@@ -1,1 +1,0 @@
-Created by [Konark Jain](www.github.com/konqr) from IIT Guwahati, India, [Dr. Rohit Prakash Chandra](https://github.com/rohitash-chandra) from the University of Sydney, Australia and [Mr. Ratneel Deo](https://github.com/rvdeo) from Fiji.
