@@ -131,12 +131,13 @@ class Network:
 
 class ptReplica(multiprocessing.Process):
 
-	def __init__(self, w, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process):
+	def __init__(self, w, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process,event):
 		#MULTIPROCESSING VARIABLES
 		multiprocessing.Process.__init__(self)
 		self.processID = temperature
 		self.parameter_queue = parameter_queue
 		self.signal_main = main_process
+		self.event =  event
 		#PARALLEL TEMPERING VARIABLES
 		self.temperature = temperature
 		self.swap_interval = swap_interval
@@ -280,6 +281,8 @@ class ptReplica(multiprocessing.Process):
 				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
+				self.event.wait()
+				print('blah')
 				# retrieve parameters fom queues if it has been swapped
 				if not self.parameter_queue.empty() : 
 					try:
@@ -338,7 +341,8 @@ class ParallelTempering:
 		# create queues for transfer of parameters between process chain
 		self.parameter_queue = [multiprocessing.Queue() for i in range(num_chains)]
 		self.chain_queue = multiprocessing.JoinableQueue()	
-		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]	
+		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]
+		self.event = [multiprocessing.Event() for i in range (self.num_chains)]
 
 	def assign_temperatures(self):
 		#Linear Spacing
@@ -356,7 +360,7 @@ class ParallelTempering:
 		w = np.random.randn(self.num_param)
 		
 		for i in range(0, self.num_chains):
-			self.chains.append(ptReplica(w,self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i]))
+			self.chains.append(ptReplica(w,self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i]))
 	
 	def swap_procedure(self, parameter_queue_1, parameter_queue_2):
 		if parameter_queue_2.empty() is False and parameter_queue_1.empty() is False:
@@ -370,10 +374,12 @@ class ParallelTempering:
 			eta2 = param2[self.num_param]
 			lhood2 = param2[self.num_param+1]
 			T2 = param2[self.num_param+2]
+			print('yo')
 			#SWAPPING PROBABILITIES
 			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
 			u = np.random.uniform(0,1)
 			if u < 1:
+				print('SWAPPED')
 				self.num_swap += 1
 				param_temp =  param1
 				param1 = param2
@@ -404,31 +410,39 @@ class ParallelTempering:
 		for j in range(0,self.num_chains):        
 			self.chains[j].start()
 		#SWAP PROCEDURE
-		chain_num = 0
+		#chain_num = 0
 		while True:
-			for k in range(0,self.num_chains-1):
+			for k in range(0,self.num_chains):
 				self.wait_chain[j].wait()
-				chain_num += 1
 				#print(chain_num)
 
 			for k in range(0,self.num_chains-1):
-				#print('starting swap')
+				print('starting swap')
 				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
 				while True:
 					if self.chain_queue.empty():
 						self.chain_queue.task_done()
+						print(k,'EMPTY QUEUE')
 						break
 					swap_process = self.chain_queue.get()
+					print(swap_process)
 					if swap_process is None:
 						self.chain_queue.task_done()
+						print(k,'No Process')
 						break
 					param1, param2 = swap_process
-					self.chain_queue.task_done()
+					#self.chain_queue.task_done()
 					self.parameter_queue[k].put(param1)
 					self.parameter_queue[k+1].put(param2)
-			print(chain_num)
-			if chain_num == self.num_chains -1  :
-				print(chain_num)
+			for k in range (self.num_chains):
+					print(k)
+					self.event[k].set()
+			count = 0
+			for i in range(self.num_chains):
+				if self.chains[i].is_alive() is False:
+					count+=1
+			if count == self.num_chains  :
+				print(count)
 				break
 			
 		
@@ -515,7 +529,7 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 4000
+		NumSample = 40000
 		maxtemp = 10
 		swap_ratio = 0.1
 		num_chains = 4
