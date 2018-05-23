@@ -131,13 +131,13 @@ class Network:
 
 class ptReplica(multiprocessing.Process):
 
-	def __init__(self, w, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, event, signal_main):
+	def __init__(self, w, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process,event):
 		#MULTIPROCESSING VARIABLES
 		multiprocessing.Process.__init__(self)
 		self.processID = temperature
 		self.parameter_queue = parameter_queue
-		self.event = event
-		self.signal_main = signal_main
+		self.signal_main = main_process
+		self.event =  event
 		#PARALLEL TEMPERING VARIABLES
 		self.temperature = temperature
 		self.swap_interval = swap_interval
@@ -257,7 +257,7 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal
 				eta = eta_pro
-				print (i,'accepted')
+				#print (i,'accepted')
 				accept_list.write('{} {} {} {} {} {} {}\n'.format(self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
@@ -278,10 +278,11 @@ class ptReplica(multiprocessing.Process):
 			#print('INITIAL W BEFORE SWAP',self.temperature,i,w)
 			#SWAPPING PREP
 			if (i%self.swap_interval == 0):
-				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood])])
+				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
 				self.event.wait()
+				print('blah')
 				# retrieve parameters fom queues if it has been swapped
 				if not self.parameter_queue.empty() : 
 					try:
@@ -290,11 +291,9 @@ class ptReplica(multiprocessing.Process):
 						w= result[0:w.size]     
 						eta = result[w.size]
 						likelihood = result[w.size+1]
-						[_, _, _rmse] = self.likelihood_func(fnn, self.traindata, w,np.exp(eta))
-						#print('SWAPPED',self.temperature,w,i,_rmse)
 					except:
 						print ('error')
-		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood])])
+		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 		#print('SWAPPED PARAM',self.temperature,param)
 		self.parameter_queue.put(param)
 		
@@ -333,16 +332,17 @@ class ParallelTempering:
 		self.swap_interval = swap_interval
 		self.path = path
 		self.maxtemp = maxtemp
+		self.num_swap = 0
 		self.num_chains = num_chains
 		self.chains = []
 		self.temperatures = []
 		self.NumSamples = int(NumSample/self.num_chains)
 		self.sub_sample_size = max(1, int( 0.05* self.NumSamples))
 		# create queues for transfer of parameters between process chain
-		self.chain_parameters = [multiprocessing.Queue() for i in range(0, self.num_chains) ]
-		# two ways events are used to synchronize chains
+		self.parameter_queue = [multiprocessing.Queue() for i in range(num_chains)]
+		self.chain_queue = multiprocessing.JoinableQueue()	
+		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]
 		self.event = [multiprocessing.Event() for i in range (self.num_chains)]
-		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]		
 
 	def assign_temperatures(self):
 		#Linear Spacing
@@ -360,7 +360,78 @@ class ParallelTempering:
 		w = np.random.randn(self.num_param)
 		
 		for i in range(0, self.num_chains):
-			self.chains.append(ptReplica(w,self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.chain_parameters[i],self.event[i],self.wait_chain[i]))
+			self.chains.append(ptReplica(w,self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i]))
+	
+	def swap_procedure(self, parameter_queue_1, parameter_queue_2):
+		if parameter_queue_2.empty() is False and parameter_queue_1.empty() is False:
+			param1 = parameter_queue_1.get()
+			param2 = parameter_queue_2.get()
+			w1 = param1[0:self.num_param]
+			eta1 = param1[self.num_param]
+			lhood1 = param1[self.num_param+1]
+			T1 = param1[self.num_param+2]
+			w2 = param2[0:self.num_param]
+			eta2 = param2[self.num_param]
+			lhood2 = param2[self.num_param+1]
+			T2 = param2[self.num_param+2]
+			print('yo')
+			#SWAPPING PROBABILITIES
+			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
+			u = np.random.uniform(0,1)
+			if u < 1:
+				print('SWAPPED')
+				self.num_swap += 1
+				param_temp =  param1
+				param1 = param2
+				param2 = param_temp
+			return param1, param2
+		else:
+			return
+		
+	def plot_figure(self, list, title): 
+
+		list_points =  list
+
+		fname = self.path
+		width = 9 
+
+		font = 9
+
+		fig = plt.figure(figsize=(10, 12))
+		ax = fig.add_subplot(111)
+ 
+
+		slen = np.arange(0,len(list),1) 
+		 
+		fig = plt.figure(figsize=(10,12))
+		ax = fig.add_subplot(111)
+		ax.spines['top'].set_color('none')
+		ax.spines['bottom'].set_color('none')
+		ax.spines['left'].set_color('none')
+		ax.spines['right'].set_color('none')
+		ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+		ax.set_title(' Posterior distribution', fontsize=  font+2)#, y=1.02)
+	
+		ax2 = fig.add_subplot(212)
+
+		list_points = np.asarray(np.split(list_points,  self.num_chains ))
+ 
+
+ 
+
+		ax2.set_facecolor('#f2f2f3') 
+		ax2.plot( list_points.T , label=None)
+		ax2.set_title(r'Trace plot',size= font+2)
+		ax2.set_xlabel('Samples',size= font+1)
+		ax2.set_ylabel('Parameter values', size= font+1) 
+
+		fig.tight_layout()
+		fig.subplots_adjust(top=0.88)
+		 
+ 
+		plt.savefig(fname + '/' + title  + '_pos_.png', bbox_inches='tight', dpi=300, transparent=False)
+		plt.clf()
+ 
 
 	def run_chains(self):
 		x_test = np.linspace(0,1,num=self.testdata.shape[0])
@@ -383,54 +454,46 @@ class ParallelTempering:
 		for j in range(0,self.num_chains):        
 			self.chains[j].start()
 		#SWAP PROCEDURE
-		flag = True  
-		while flag:
-			#WAIT FOR THEM TO COMPLETE SAMPLING
-			for j in range(0,self.num_chains):
+		#chain_num = 0
+		while True:
+			for k in range(0,self.num_chains):
 				self.wait_chain[j].wait()
-			#GET INFORMATION FROM EACH
-			for j in range(0, self.num_chains):
-				if self.chain_parameters[j].empty() is False:
-					result = self.chain_parameters[j].get()
-					replica_param[j,:]=result[0:self.num_param]
-					eta[j] = result[self.num_param]
-					lhood[j] = result[self.num_param+1]
-			# create swapping proposals between adjacent chains
-			for k in range(0, self.num_chains-1): 
-				swap_proposal[k]=  (lhood[k]/[1 if lhood[k+1] == 0 else lhood[k+1]])*(1/self.temperatures[k] * 1/self.temperatures[k+1])
-			for l in range(self.num_chains-1,0,-1):
-				u  = random.uniform(0,1)
-				swap_prob = swap_proposal[l-1]
-				if u < 1:#swap_prob:
-					#print(l,' ',l-1,' swapped')
-					number_exchange[l] += 1
-					param = np.concatenate([replica_param[l-1,:],np.asarray([eta[l-1]]).reshape(1),np.asarray([lhood[l-1]])])
-					self.chain_parameters[l].put(param)
-					param = np.concatenate([replica_param[l,:],np.asarray([eta[l]]).reshape(1),np.asarray([lhood[l]])])
-					self.chain_parameters[l-1].put(param)
-					#print('swapped',l,' ',l-1,param)
-					#print ('chains swapped')				
-				else:
-					param = np.concatenate([replica_param[l-1,:],np.asarray([eta[l-1]]).reshape(1),np.asarray([lhood[l-1]])])
-					self.chain_parameters[l-1].put(param)
-					param = np.concatenate([replica_param[l,:],np.asarray([eta[l]]).reshape(1),np.asarray([lhood[l]])])
-					self.chain_parameters[l].put(param)
-			#RESUME SUSPENDED PROCESSES
-			for k in range(self.num_chains):
-				self.event[k].set()
-			#CHECK FOR STILL RUNNING CHAINS AND EXIT LOOP STATEMENT
-			count = 0 #Completed chains counter variable
+				#print(chain_num)
+
+			for k in range(0,self.num_chains-1):
+				print('starting swap')
+				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
+				while True:
+					if self.chain_queue.empty():
+						self.chain_queue.task_done()
+						print(k,'EMPTY QUEUE')
+						break
+					swap_process = self.chain_queue.get()
+					print(swap_process)
+					if swap_process is None:
+						self.chain_queue.task_done()
+						print(k,'No Process')
+						break
+					param1, param2 = swap_process
+					#self.chain_queue.task_done()
+					self.parameter_queue[k].put(param1)
+					self.parameter_queue[k+1].put(param2)
+			for k in range (self.num_chains):
+					print(k)
+					self.event[k].set()
+			count = 0
 			for i in range(self.num_chains):
 				if self.chains[i].is_alive() is False:
 					count+=1
-					while self.chain_parameters[i].empty() is False:
-						dummy = self.chain_parameters[i].get()
-			if count == self.num_chains:
-				flag = False
+			if count == self.num_chains  :
+				print(count)
+				break
+			
+		
 		#JOIN THEM TO MAIN PROCESS
 		for j in range(0,self.num_chains):
 			self.chains[j].join()
-		print(number_exchange, 'num_exchange, process ended')
+		self.chain_queue.join()
 		#GETTING DATA
 		burnin = int(self.NumSamples*self.burn_in)
 		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param))
@@ -466,7 +529,9 @@ class ParallelTempering:
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		fx_test = fxtest_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.testdata.shape[0])
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-
+		for s in range(self.num_param):  
+			self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
+		print("NUMBER OF SWAPS =", self.num_swap)
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
 def main():
@@ -509,7 +574,7 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 4000
+		NumSample = 800
 		maxtemp = 10
 		swap_ratio = 0.1
 		num_chains = 4
