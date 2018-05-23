@@ -509,10 +509,10 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 80000
+		NumSample = 4000
 		maxtemp = 10
-		swap_ratio = 1
-		num_chains = 20
+		swap_ratio = 0.1
+		num_chains = 4
 		burn_in = 0.3
 		swap_interval =   int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
