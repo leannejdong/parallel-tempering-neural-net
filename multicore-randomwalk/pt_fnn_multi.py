@@ -528,7 +528,7 @@ def make_directory (directory):
 
 def main():
 
-	for i in range(3,21):
+	for i in range(1,21):
 		#l	= "/home/konark/parallel-tempering-neural-net-master/LDMCMC_timeseries-master/"
 		
 		problem =	2
@@ -573,8 +573,8 @@ def main():
 		NumSample = 80000
 		maxtemp = 5*i
 		swap_ratio = 0.1
-		num_chains = 10
-		burn_in = 0.05
+		num_chains = 5
+		burn_in = 0.2
 
 		###############################
 
