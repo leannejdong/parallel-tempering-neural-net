@@ -301,9 +301,9 @@ class ptReplica(multiprocessing.Process):
 		make_directory(self.path+'/posterior')
 		print ((naccept*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = naccept / (samples * 1.0) * 100
-		plt.title("Plot of Accepted Proposals")
-		plt.savefig(self.path+'/results/proposals.png')
-		plt.clf()
+		# plt.title("Plot of Accepted Proposals")
+		# plt.savefig(self.path+'/results/proposals.png')
+		# plt.clf()
 		#SAVING PARAMETERS
 		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name,pos_w ) 
@@ -571,9 +571,9 @@ def main():
 		topology = [ip, hidden, output]
 
 		NumSample = 80000
-		maxtemp = 10
+		maxtemp = 5*i
 		swap_ratio = 0.1
-		num_chains = 5*i
+		num_chains = 10
 		burn_in = 0.05
 
 		###############################
