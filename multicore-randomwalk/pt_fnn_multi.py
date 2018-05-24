@@ -4,7 +4,7 @@ from __future__ import print_function, division
 import multiprocessing
 import os
 import sys
-
+import gc
 import numpy as np
 import random
 import time
@@ -18,7 +18,7 @@ from matplotlib.collections import PatchCollection
 from scipy.stats import multivariate_normal
 from scipy.stats import norm
 
-np.random.seed(1)
+#np.random.seed(1)
 
 #REGRESSION FNN Randomwalk (Taken from R. Chandra, L. Azizi, S. Cripps, 'Bayesian neural learning via Langevin dynamicsfor chaotic time series prediction', ICONIP 2017.)
 
@@ -344,15 +344,109 @@ class ParallelTempering:
 		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]
 		self.event = [multiprocessing.Event() for i in range (self.num_chains)]
 
+	def default_beta_ladder(self, ndim, ntemps, Tmax): #https://github.com/konqr/ptemcee/blob/master/ptemcee/sampler.py
+		"""
+		Returns a ladder of :math:`\beta \equiv 1/T` under a geometric spacing that is determined by the
+		arguments ``ntemps`` and ``Tmax``.  The temperature selection algorithm works as follows:
+		Ideally, ``Tmax`` should be specified such that the tempered posterior looks like the prior at
+		this temperature.  If using adaptive parallel tempering, per `arXiv:1501.05823
+		<http://arxiv.org/abs/1501.05823>`_, choosing ``Tmax = inf`` is a safe bet, so long as
+		``ntemps`` is also specified.
+		:param ndim:
+			The number of dimensions in the parameter space.
+		:param ntemps: (optional)
+			If set, the number of temperatures to generate.
+		:param Tmax: (optional)
+			If set, the maximum temperature for the ladder.
+		Temperatures are chosen according to the following algorithm:
+		* If neither ``ntemps`` nor ``Tmax`` is specified, raise an exception (insufficient
+		  information).
+		* If ``ntemps`` is specified but not ``Tmax``, return a ladder spaced so that a Gaussian
+		  posterior would have a 25% temperature swap acceptance ratio.
+		* If ``Tmax`` is specified but not ``ntemps``:
+		  * If ``Tmax = inf``, raise an exception (insufficient information).
+		  * Else, space chains geometrically as above (for 25% acceptance) until ``Tmax`` is reached.
+		* If ``Tmax`` and ``ntemps`` are specified:
+		  * If ``Tmax = inf``, place one chain at ``inf`` and ``ntemps-1`` in a 25% geometric spacing.
+		  * Else, use the unique geometric spacing defined by ``ntemps`` and ``Tmax``.
+		"""
+
+		if type(ndim) != int or ndim < 1:
+			raise ValueError('Invalid number of dimensions specified.')
+		if ntemps is None and Tmax is None:
+			raise ValueError('Must specify one of ``ntemps`` and ``Tmax``.')
+		if Tmax is not None and Tmax <= 1:
+			raise ValueError('``Tmax`` must be greater than 1.')
+		if ntemps is not None and (type(ntemps) != int or ntemps < 1):
+			raise ValueError('Invalid number of temperatures specified.')
+
+		tstep = np.array([25.2741, 7., 4.47502, 3.5236, 3.0232,
+						  2.71225, 2.49879, 2.34226, 2.22198, 2.12628,
+						  2.04807, 1.98276, 1.92728, 1.87946, 1.83774,
+						  1.80096, 1.76826, 1.73895, 1.7125, 1.68849,
+						  1.66657, 1.64647, 1.62795, 1.61083, 1.59494,
+						  1.58014, 1.56632, 1.55338, 1.54123, 1.5298,
+						  1.51901, 1.50881, 1.49916, 1.49, 1.4813,
+						  1.47302, 1.46512, 1.45759, 1.45039, 1.4435,
+						  1.4369, 1.43056, 1.42448, 1.41864, 1.41302,
+						  1.40761, 1.40239, 1.39736, 1.3925, 1.38781,
+						  1.38327, 1.37888, 1.37463, 1.37051, 1.36652,
+						  1.36265, 1.35889, 1.35524, 1.3517, 1.34825,
+						  1.3449, 1.34164, 1.33847, 1.33538, 1.33236,
+						  1.32943, 1.32656, 1.32377, 1.32104, 1.31838,
+						  1.31578, 1.31325, 1.31076, 1.30834, 1.30596,
+						  1.30364, 1.30137, 1.29915, 1.29697, 1.29484,
+						  1.29275, 1.29071, 1.2887, 1.28673, 1.2848,
+						  1.28291, 1.28106, 1.27923, 1.27745, 1.27569,
+						  1.27397, 1.27227, 1.27061, 1.26898, 1.26737,
+						  1.26579, 1.26424, 1.26271, 1.26121,
+						  1.25973])
+
+		if ndim > tstep.shape[0]:
+			# An approximation to the temperature step at large
+			# dimension
+			tstep = 1.0 + 2.0*np.sqrt(np.log(4.0))/np.sqrt(ndim)
+		else:
+			tstep = tstep[ndim-1]
+
+		appendInf = False
+		if Tmax == np.inf:
+			appendInf = True
+			Tmax = None
+			ntemps = ntemps - 1
+
+		if ntemps is not None:
+			if Tmax is None:
+				# Determine Tmax from ntemps.
+				Tmax = tstep ** (ntemps - 1)
+		else:
+			if Tmax is None:
+				raise ValueError('Must specify at least one of ``ntemps'' and '
+								 'finite ``Tmax``.')
+
+			# Determine ntemps from Tmax.
+			ntemps = int(np.log(Tmax) / np.log(tstep) + 2)
+
+		betas = np.logspace(0, -np.log10(Tmax), ntemps)
+		if appendInf:
+			# Use a geometric spacing, but replace the top-most temperature with
+			# infinity.
+			betas = np.concatenate((betas, [0]))
+
+		return betas
+		
 	def assign_temperatures(self):
-		#Linear Spacing
-		temp = 2
-		for i in range(0,self.num_chains):
-			self.temperatures.append(temp)
-			temp += (self.maxtemp/self.num_chains)
-			#print (self.temperatures[i])
+		# #Linear Spacing
+		# temp = 2
+		# for i in range(0,self.num_chains):
+		# 	self.temperatures.append(temp)
+		# 	temp += (self.maxtemp/self.num_chains)
+		# 	#print (self.temperatures[i])
 		#Geometric Spacing
-		#### TBD - Konark
+		betas = self.default_beta_ladder(2, ntemps=self.num_chains, Tmax=self.maxtemp)      
+		for i in range(0, self.num_chains):         
+			self.temperatures.append(np.inf if betas[i] is 0 else 1.0/betas[i])
+			print (self.temperatures[i])
 
 	def initialize_chains(self, burn_in):
 		self.burn_in = burn_in
@@ -398,7 +492,31 @@ class ParallelTempering:
 		font = 9
 
 		fig = plt.figure(figsize=(10, 12))
+		ax = fig.add_subplot(111)
+ 
 
+		slen = np.arange(0,len(list),1) 
+		 
+		fig = plt.figure(figsize=(10,12))
+		ax = fig.add_subplot(111)
+		ax.spines['top'].set_color('none')
+		ax.spines['bottom'].set_color('none')
+		ax.spines['left'].set_color('none')
+		ax.spines['right'].set_color('none')
+		ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+		ax.set_title(' Posterior distribution', fontsize=  font+2)#, y=1.02)
+	
+		ax1 = fig.add_subplot(211) 
+
+		n, rainbins, patches = ax1.hist(list_points,  bins = 20,  alpha=0.5, facecolor='sandybrown', normed=False)	
+ 
+  
+		color = ['blue','red', 'pink', 'green', 'purple', 'cyan', 'orange','olive', 'brown', 'black']
+
+		ax1.grid(True)
+		ax1.set_ylabel('Frequency',size= font+1)
+		ax1.set_xlabel('Parameter values', size= font+1)
+	
 		ax2 = fig.add_subplot(212)
 
 		list_points = np.asarray(np.split(list_points,  self.num_chains ))
@@ -406,13 +524,12 @@ class ParallelTempering:
 
  
 
-		ax2.set_facecolor('#f2f2f3')
-		for i in range(self.num_chains): 
-			ax2.plot( list_points.T[:,i] , label=str(self.temperatures[i]))
-		ax2.set_title('Trace plot',size= font+2)
+		ax2.set_facecolor('#f2f2f3') 
+		ax2.plot( list_points.T , label=None)
+		ax2.set_title(r'Trace plot',size= font+2)
 		ax2.set_xlabel('Samples',size= font+1)
 		ax2.set_ylabel('Parameter values', size= font+1) 
-		ax2.legend()
+
 		fig.tight_layout()
 		fig.subplots_adjust(top=0.88)
 		 
@@ -447,7 +564,6 @@ class ParallelTempering:
 			for k in range(0,self.num_chains):
 				self.wait_chain[j].wait()
 				#print(chain_num)
-
 			for k in range(0,self.num_chains-1):
 				#print('starting swap')
 				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
@@ -527,10 +643,8 @@ def make_directory (directory):
 		os.makedirs(directory)
 
 def main():
-
-	for i in range(1,21):
-		#l	= "/home/konark/parallel-tempering-neural-net-master/LDMCMC_timeseries-master/"
-		
+	resultingfile = open('RESULTS/master_result_file.txt','a+')
+	for i in range(1,11):
 		problem =	2
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead\\Lazer\\train.txt")
@@ -570,10 +684,10 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 80000
-		maxtemp = 5*i
-		swap_ratio = 0.1
-		num_chains = 5
+		NumSample = 40000*i
+		maxtemp = np.inf
+		swap_ratio = 0.125
+		num_chains = 5*i
 		burn_in = 0.2
 
 		###############################
@@ -610,7 +724,7 @@ def main():
 		outres = open(path+'/result.txt', "a+")
 		np.savetxt(outres, (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total), fmt='%1.5f')
 		print (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std)
-		
+		resultingfile.write([path,rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total])
 		ytestdata = testdata[:, ip]
 		ytraindata = traindata[:, ip]
 
@@ -653,5 +767,8 @@ def main():
 		# plt.savefig(path+'/w_pos.svg', format='svg', dpi=600)
 
 		# plt.clf()
+		#dir()
+		gc.collect()
+	resultingfile.close()
 
 if __name__ == "__main__": main()
