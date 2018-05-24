@@ -2,6 +2,8 @@
 
 from __future__ import print_function, division
 import multiprocessing
+import os
+import sys
 
 import numpy as np
 import random
@@ -205,7 +207,6 @@ class ptReplica(multiprocessing.Process):
 		pred_test = fnn.evaluate_proposal(self.testdata, w)
 		#Check Variance of Proposal
 		eta = np.log(np.var(pred_train - y_train))
-		print(np.asarray([eta]).shape)
 		tau_pro = np.exp(eta)
 		sigma_squared = 25
 		nu_1 = 0
@@ -282,7 +283,7 @@ class ptReplica(multiprocessing.Process):
 				self.parameter_queue.put(param)
 				self.signal_main.set()
 				self.event.wait()
-				print('blah')
+				#print(i, self.temperature)
 				# retrieve parameters fom queues if it has been swapped
 				if not self.parameter_queue.empty() : 
 					try:
@@ -296,13 +297,12 @@ class ptReplica(multiprocessing.Process):
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 		#print('SWAPPED PARAM',self.temperature,param)
 		self.parameter_queue.put(param)
-		
-
+		make_directory(self.path+'/results')
+		make_directory(self.path+'/posterior')
 		print ((naccept*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = naccept / (samples * 1.0) * 100
 		plt.title("Plot of Accepted Proposals")
 		plt.savefig(self.path+'/results/proposals.png')
-		plt.savefig(self.path+'/results/proposals.svg', format='svg', dpi=600)
 		plt.clf()
 		#SAVING PARAMETERS
 		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
@@ -350,7 +350,7 @@ class ParallelTempering:
 		for i in range(0,self.num_chains):
 			self.temperatures.append(temp)
 			temp += (self.maxtemp/self.num_chains)
-			print (self.temperatures[i])
+			#print (self.temperatures[i])
 		#Geometric Spacing
 		#### TBD - Konark
 
@@ -374,12 +374,12 @@ class ParallelTempering:
 			eta2 = param2[self.num_param]
 			lhood2 = param2[self.num_param+1]
 			T2 = param2[self.num_param+2]
-			print('yo')
+			#print('yo')
 			#SWAPPING PROBABILITIES
 			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
 			u = np.random.uniform(0,1)
-			if u < 1:
-				print('SWAPPED')
+			if u < swap_proposal:
+				#print('SWAPPED')
 				self.num_swap += 1
 				param_temp =  param1
 				param1 = param2
@@ -398,20 +398,7 @@ class ParallelTempering:
 		font = 9
 
 		fig = plt.figure(figsize=(10, 12))
-		ax = fig.add_subplot(111)
- 
 
-		slen = np.arange(0,len(list),1) 
-		 
-		fig = plt.figure(figsize=(10,12))
-		ax = fig.add_subplot(111)
-		ax.spines['top'].set_color('none')
-		ax.spines['bottom'].set_color('none')
-		ax.spines['left'].set_color('none')
-		ax.spines['right'].set_color('none')
-		ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
-		ax.set_title(' Posterior distribution', fontsize=  font+2)#, y=1.02)
-	
 		ax2 = fig.add_subplot(212)
 
 		list_points = np.asarray(np.split(list_points,  self.num_chains ))
@@ -419,12 +406,13 @@ class ParallelTempering:
 
  
 
-		ax2.set_facecolor('#f2f2f3') 
-		ax2.plot( list_points.T , label=None)
-		ax2.set_title(r'Trace plot',size= font+2)
+		ax2.set_facecolor('#f2f2f3')
+		for i in range(self.num_chains): 
+			ax2.plot( list_points.T[:,i] , label=str(self.temperatures[i]))
+		ax2.set_title('Trace plot',size= font+2)
 		ax2.set_xlabel('Samples',size= font+1)
 		ax2.set_ylabel('Parameter values', size= font+1) 
-
+		ax2.legend()
 		fig.tight_layout()
 		fig.subplots_adjust(top=0.88)
 		 
@@ -461,32 +449,32 @@ class ParallelTempering:
 				#print(chain_num)
 
 			for k in range(0,self.num_chains-1):
-				print('starting swap')
+				#print('starting swap')
 				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
 				while True:
 					if self.chain_queue.empty():
 						self.chain_queue.task_done()
-						print(k,'EMPTY QUEUE')
+						#print(k,'EMPTY QUEUE')
 						break
 					swap_process = self.chain_queue.get()
-					print(swap_process)
+					#print(swap_process)
 					if swap_process is None:
 						self.chain_queue.task_done()
-						print(k,'No Process')
+						#print(k,'No Process')
 						break
 					param1, param2 = swap_process
 					#self.chain_queue.task_done()
 					self.parameter_queue[k].put(param1)
 					self.parameter_queue[k+1].put(param2)
 			for k in range (self.num_chains):
-					print(k)
+					#print(k)
 					self.event[k].set()
 			count = 0
 			for i in range(self.num_chains):
 				if self.chains[i].is_alive() is False:
 					count+=1
 			if count == self.num_chains  :
-				print(count)
+				#print(count)
 				break
 			
 		
@@ -534,54 +522,67 @@ class ParallelTempering:
 		print("NUMBER OF SWAPS =", self.num_swap)
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
+def make_directory (directory): 
+	if not os.path.exists(directory):
+		os.makedirs(directory)
+
 def main():
 
-	for problem in range(2,3):
+	for i in range(3,21):
 		#l	= "/home/konark/parallel-tempering-neural-net-master/LDMCMC_timeseries-master/"
-		path = "results"
+		
 		problem =	2
 		if problem ==	1:
-			traindata = np.loadtxt(l	+ "Data_OneStepAhead\\Lazer\\train.txt")
-			testdata	= np.loadtxt(l + "Data_OneStepAhead\\Lazer\\test.txt")	#
+			traindata = np.loadtxt("Data_OneStepAhead\\Lazer\\train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead\\Lazer\\test.txt")	#
 			name	= "Lazer"
 		if problem ==	2:
 			traindata = np.loadtxt(  "Data_OneStepAhead/Sunspot/train.txt")
 			testdata	= np.loadtxt( "Data_OneStepAhead/Sunspot/test.txt")	#
 			name	= "Sunspot"
 		if problem ==	3:
-			traindata = np.loadtxt(l	+ "Data_OneStepAhead/Mackey/train.txt")
-			testdata	= np.loadtxt(l + "Data_OneStepAhead/Mackey/test.txt")  #
+			traindata = np.loadtxt("Data_OneStepAhead/Mackey/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Mackey/test.txt")  #
 			name	= "Mackey"
 		if problem ==	4:
-			traindata = np.loadtxt(l	+ "Data_OneStepAhead/Lorenz/train.txt")
-			testdata	= np.loadtxt(l + "Data_OneStepAhead/Lorenz/test.txt")  #
+			traindata = np.loadtxt("Data_OneStepAhead/Lorenz/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Lorenz/test.txt")  #
 			name	= "Lorenz"
 		if problem ==	5:
-			traindata = np.loadtxt(l	+ "Data_OneStepAhead/Rossler/train.txt")
-			testdata	= np.loadtxt(l + "Data_OneStepAhead/Rossler/test.txt")	#
+			traindata = np.loadtxt( "Data_OneStepAhead/Rossler/train.txt")
+			testdata	= np.loadtxt( "Data_OneStepAhead/Rossler/test.txt")	#
 			name	= "Rossler"
 		if problem ==	6:
-			traindata = np.loadtxt(l	+ "Data_OneStepAhead/Henon/train.txt")
-			testdata	= np.loadtxt(l+"Data_OneStepAhead/Henon/test.txt")	#
+			traindata = np.loadtxt("Data_OneStepAhead/Henon/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Henon/test.txt")	#
 			name	= "Henon"
 		if problem ==	7:
-			traindata = np.loadtxt(l+"Data_OneStepAhead/ACFinance/train.txt") 
-			testdata	= np.loadtxt(l+"Data_OneStepAhead/ACFinance/test.txt")	#
+			traindata = np.loadtxt("Data_OneStepAhead/ACFinance/train.txt") 
+			testdata	= np.loadtxt("Data_OneStepAhead/ACFinance/test.txt")	#
 			name	= "ACFinance"
 		
+		###############################
+		#THESE ARE THE HYPERPARAMETERS#
+		###############################
+
 		hidden = 5
 		ip = 4 #input
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 800
+		NumSample = 80000
 		maxtemp = 10
 		swap_ratio = 0.1
-		num_chains = 4
-		burn_in = 0.3
+		num_chains = 5*i
+		burn_in = 0.05
+
+		###############################
+
 		swap_interval =   int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-
+		path = "RESULTS/results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		make_directory(path)
+		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)
 		pt.initialize_chains(burn_in)
 
