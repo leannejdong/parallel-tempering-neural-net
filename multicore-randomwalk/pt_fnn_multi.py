@@ -468,7 +468,7 @@ class ParallelTempering:
 			eta2 = param2[self.num_param]
 			lhood2 = param2[self.num_param+1]
 			T2 = param2[self.num_param+2]
-			#print('yo')
+			print('yo')
 			#SWAPPING PROBABILITIES
 			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
 			u = np.random.uniform(0,1)
@@ -644,7 +644,7 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,11):
+	for i in range(6,7):
 		problem =	2
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead\\Lazer\\train.txt")
@@ -684,10 +684,10 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 40000*i
-		maxtemp = np.inf
+		NumSample = 800
+		maxtemp = 15  
 		swap_ratio = 0.125
-		num_chains = 5*i
+		num_chains = 10
 		burn_in = 0.2
 
 		###############################
@@ -724,7 +724,7 @@ def main():
 		outres = open(path+'/result.txt', "a+")
 		np.savetxt(outres, (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total), fmt='%1.5f')
 		print (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std)
-		resultingfile.write([path,rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total])
+		np.savetxt(resultingfile,(NumSample, maxtemp, swap_ratio, num_chains, rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total))
 		ytestdata = testdata[:, ip]
 		ytraindata = traindata[:, ip]
 
@@ -769,6 +769,7 @@ def main():
 		# plt.clf()
 		#dir()
 		gc.collect()
+		outres.close()
 	resultingfile.close()
 
 if __name__ == "__main__": main()
