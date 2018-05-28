@@ -341,7 +341,7 @@ class MCMC:
 
 
 def main():
-    for problem in xrange(1, 8):
+    for problem in xrange(2,3):
 
         path = str(problem)+'mcmcresults'
         try:
@@ -396,7 +396,7 @@ def main():
 
         random.seed(time.time())
 
-        numSamples = 40000   # need to decide yourself
+        numSamples = 400   # need to decide yourself
 
         mcmc = MCMC(numSamples, traindata, testdata, topology)  # declare class
 

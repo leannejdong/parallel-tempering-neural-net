@@ -258,7 +258,7 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal
 				eta = eta_pro
-				#print (i,'accepted')
+				#print (i, mh_prob,'accepted')
 				accept_list.write('{} {} {} {} {} {} {}\n'.format(self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
@@ -268,6 +268,7 @@ class ptReplica(multiprocessing.Process):
 				rmse_test[i + 1,] = rmsetest
 				plt.plot(x_train, pred_train)
 			else:
+				#print (i, mh_prob,'not accepted')
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = pos_w[i,]
 				pos_tau[i + 1,] = pos_tau[i,]
@@ -468,7 +469,6 @@ class ParallelTempering:
 			eta2 = param2[self.num_param]
 			lhood2 = param2[self.num_param+1]
 			T2 = param2[self.num_param+2]
-			print('yo')
 			#SWAPPING PROBABILITIES
 			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
 			u = np.random.uniform(0,1)
@@ -644,7 +644,7 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(6,7):
+	for i in range(1,11):
 		problem =	2
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead\\Lazer\\train.txt")
@@ -684,8 +684,8 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 800
-		maxtemp = 15  
+		NumSample = 80000
+		maxtemp = 10*i  
 		swap_ratio = 0.125
 		num_chains = 10
 		burn_in = 0.2
