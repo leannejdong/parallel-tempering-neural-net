@@ -1339,8 +1339,101 @@ Successfully Regressed
 15.537499999999998 % total accepted
 381.04357647895813 sec time taken
 0.0404245625 0.031062463226273505 0.029557625 0.01928689462716523
-RESULTS/results_200000_60_4_0.125
+RESULTS/Lazer_results_320000_20_4_0.125
 1.0
-3.914867641168864
-15.326188647871064
-60.0
+2.71441761659
+7.36806299728
+20.0
+9.76 % was accepted
+14.525 % was accepted
+18.31 % was accepted
+19.325 % was accepted
+NUMBER OF SWAPS = 731575
+Successfully Regressed
+15.4775 % total accepted
+731.04717207 sec time taken
+0.0540021875 0.036266489718 0.0564078125 0.0382086594598
+RESULTS/Sunspot_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+3.27 % was accepted
+9.20125 % was accepted
+13.90625 % was accepted
+33.57375 % was accepted
+NUMBER OF SWAPS = 371526
+Successfully Regressed
+14.9875 % total accepted
+895.219094038 sec time taken
+0.031409609375 0.046373143846 0.027722890625 0.0460608540183
+RESULTS/Mackey_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+2.435 % was accepted
+0.94375 % was accepted
+5.2325 % was accepted
+8.675 % was accepted
+NUMBER OF SWAPS = 115871
+Successfully Regressed
+4.32 % total accepted
+666.996262074 sec time taken
+0.0068592578125 0.0080923983087 0.0073030078125 0.00801132393962
+RESULTS/Lorenz_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+3.74 % was accepted
+2.06125 % was accepted
+5.31375 % was accepted
+15.21875 % was accepted
+NUMBER OF SWAPS = 203394
+Successfully Regressed
+6.5825 % total accepted
+702.708616018 sec time taken
+0.0206778515625 0.0210009553743 0.020409296875 0.0192085505327
+RESULTS/Rossler_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+2.7625 % was accepted
+3.63 % was accepted
+8.355 % was accepted
+28.7025 % was accepted
+NUMBER OF SWAPS = 673879
+Successfully Regressed
+10.8625 % total accepted
+822.516507864 sec time taken
+0.0190891796875 0.0209228982692 0.0212119921875 0.0238469612176
+RESULTS/Henon_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+7.13125 % was accepted
+21.8925 % was accepted
+39.27375 % was accepted
+50.02125 % was accepted
+NUMBER OF SWAPS = 1245627
+Successfully Regressed
+29.5775 % total accepted
+1288.29008698 sec time taken
+0.112815820313 0.0701323279351 0.109467421875 0.0693421427906
+RESULTS/ACFinance_results_320000_20_4_0.125
+1.0
+2.71441761659
+7.36806299728
+20.0
+2.7775 % was accepted
+13.66 % was accepted
+22.1375 % was accepted
+52.7825 % was accepted
+NUMBER OF SWAPS = 316012
+Successfully Regressed
+22.84 % total accepted
+1249.22234583 sec time taken
+0.029862578125 0.0258532340139 0.018064765625 0.0234247337053

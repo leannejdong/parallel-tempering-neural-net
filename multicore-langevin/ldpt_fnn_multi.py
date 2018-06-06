@@ -12,6 +12,7 @@ import operator
 import math
 import matplotlib as mpl
 import matplotlib.mlab as mlab
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
@@ -220,13 +221,13 @@ class ptReplica(multiprocessing.Process):
 		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w, tau_pro)
 		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w, tau_pro)
 		#Beginning Sampling using MCMC RANDOMWALK
-		plt.plot(x_train, y_train)
 
 		accept_list = open(self.path+'/acceptlist_'+str(self.temperature)+'.txt', "a+")
 
-
+		timer = time.time()
 		for i in range(samples - 1):
 			#GENERATING SAMPLE
+			timer_0 = time.time()
 			w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
 			w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
 			w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth)
@@ -266,7 +267,6 @@ class ptReplica(multiprocessing.Process):
 				fxtest_samples[i + 1,] = pred_test
 				rmse_train[i + 1,] = rmsetrain
 				rmse_test[i + 1,] = rmsetest
-				plt.plot(x_train, pred_train)
 			else:
 				#print (i, mh_prob,'not accepted')
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
@@ -276,10 +276,12 @@ class ptReplica(multiprocessing.Process):
 				fxtest_samples[i + 1,] = fxtest_samples[i,]
 				rmse_train[i + 1,] = rmse_train[i,]
 				rmse_test[i + 1,] = rmse_test[i,]
+			print(self.temperature,i,"sampling took", (time.time()-timer_0))
 			#print('INITIAL W(PROP) BEFORE SWAP',self.temperature,w_proposal,i,rmsetrain)
 			#print('INITIAL W BEFORE SWAP',self.temperature,i,w)
 			#SWAPPING PREP
 			if (i%self.swap_interval == 0):
+				timer_1 = time.time() 
 				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
@@ -295,8 +297,9 @@ class ptReplica(multiprocessing.Process):
 						likelihood = result[w.size+1]
 					except:
 						print ('error')
+				print(self.temperature,i,"swapping took",(time.time()-timer_1))
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
-		#print('SWAPPED PARAM',self.temperature,param)
+		print(self.temperature,"Time Taken = ",time.time()-timer)
 		self.parameter_queue.put(param)
 		make_directory(self.path+'/results')
 		make_directory(self.path+'/posterior')
@@ -644,11 +647,11 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,11):
+	for i in range(1,2):
 		problem =	2
 		if problem ==	1:
-			traindata = np.loadtxt("Data_OneStepAhead\\Lazer\\train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead\\Lazer\\test.txt")	#
+			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
 			name	= "Lazer"
 		if problem ==	2:
 			traindata = np.loadtxt(  "Data_OneStepAhead/Sunspot/train.txt")
@@ -684,8 +687,8 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 80000
-		maxtemp = 10*i  
+		NumSample = 500000
+		maxtemp = 20  
 		swap_ratio = 0.125
 		num_chains = 10
 		burn_in = 0.2

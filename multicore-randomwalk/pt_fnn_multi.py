@@ -333,6 +333,7 @@ class ParallelTempering:
 		self.path = path
 		self.maxtemp = maxtemp
 		self.num_swap = 0
+		self.total_swap_proposals = 0
 		self.num_chains = num_chains
 		self.chains = []
 		self.temperatures = []
@@ -440,8 +441,8 @@ class ParallelTempering:
 		# temp = 2
 		# for i in range(0,self.num_chains):
 		# 	self.temperatures.append(temp)
-		# 	temp += (self.maxtemp/self.num_chains)
-		# 	#print (self.temperatures[i])
+		# 	temp += 2.5 #(self.maxtemp/self.num_chains)
+		# 	print (self.temperatures[i])
 		#Geometric Spacing
 		betas = self.default_beta_ladder(2, ntemps=self.num_chains, Tmax=self.maxtemp)      
 		for i in range(0, self.num_chains):         
@@ -470,16 +471,20 @@ class ParallelTempering:
 			T2 = param2[self.num_param+2]
 			#print('yo')
 			#SWAPPING PROBABILITIES
-			swap_proposal =  (lhood1/[1 if lhood2 == 0 else lhood2])*(1/T1 * 1/T2)
+			try:
+				swap_proposal =  min(1,0.5*np.exp(lhood2 - lhood1))
+			except OverflowError:
+				swap_proposal = 1
 			u = np.random.uniform(0,1)
 			if u < swap_proposal:
-				#print('SWAPPED')
+				self.total_swap_proposals += 1
 				self.num_swap += 1
 				param_temp =  param1
 				param1 = param2
 				param2 = param_temp
 			return param1, param2
 		else:
+			self.total_swap_proposals += 1
 			return
 		
 	def plot_figure(self, list, title): 
@@ -560,6 +565,7 @@ class ParallelTempering:
 			self.chains[j].start()
 		#SWAP PROCEDURE
 		#chain_num = 0
+		
 		while True:
 			for k in range(0,self.num_chains):
 				self.wait_chain[j].wait()
@@ -579,7 +585,7 @@ class ParallelTempering:
 						#print(k,'No Process')
 						break
 					param1, param2 = swap_process
-					#self.chain_queue.task_done()
+					
 					self.parameter_queue[k].put(param1)
 					self.parameter_queue[k+1].put(param2)
 			for k in range (self.num_chains):
@@ -636,6 +642,7 @@ class ParallelTempering:
 		for s in range(self.num_param):  
 			self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
 		print("NUMBER OF SWAPS =", self.num_swap)
+		print("SWAP ACCEPTANCE = ", self.num_swap*100/self.total_swap_proposals," %")
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
 def make_directory (directory): 
@@ -644,8 +651,8 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,8):
-		problem =	i
+	for i in range(1,2):
+		problem =	2
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
 			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
@@ -684,17 +691,17 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 800000
+		NumSample = 200000
 		maxtemp = 20  
 		swap_ratio = 0.125
-		num_chains = 10
+		num_chains = 20  
 		burn_in = 0.2
 
 		###############################
 
-		swap_interval =   int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
+		swap_interval =  int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-		path = "RESULTS/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		path = "RESULTS/NUM CHAIN (Linear increment)/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
 		make_directory(path)
 		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)

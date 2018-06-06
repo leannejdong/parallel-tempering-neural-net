@@ -1,0 +1,23 @@
+import numpy as np 
+import  matplotlib.pyplot as plt
+
+train = np.asarray([0.019,0.01504,0.02207,0.03695,0.02549,0.02806,0.0327,0.04322])
+trainerr = np.asarray([0.04416,0.00505,0.01453,0.03758,0.02295,0.01955,0.02543,0.04453])
+test = np.asarray([0.01921,0.01413,0.01894,0.03316,0.02278,0.02432,0.02918,0.03557])
+testerr = np.asarray([0.05099,0.00497,0.01347,0.03523,0.016,0.017,0.02253,0.03587])
+timetaken = np.asarray([2908.32856,1393.51195,1142.73732,800.62239,737.03918,758.88466,694.59029,673.49278])
+x = np.linspace(4,32,8)
+fig = plt.figure()
+host = fig.add_subplot(111)
+second = host.twinx()
+host.set_xlabel("Number of Chains")
+host.set_ylabel("RMSE Values")
+second.set_ylabel("Time in Seconds")
+second.set_ylim(100,3000)
+p2 = host.errorbar(x, test, yerr=testerr/20, label = "Test")
+p1 = host.errorbar(x, train, yerr=trainerr/20, label="Train")
+p3 = second.plot(x, timetaken, 'r-.', label="Time")
+host.legend(loc=1)
+second.legend(loc=4)
+second.yaxis.label.set_color('r')
+fig.savefig('plot.pdf')
