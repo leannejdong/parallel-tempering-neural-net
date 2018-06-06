@@ -129,13 +129,13 @@ class Network:
 		Input = np.zeros((1, self.Top[0]))  # temp hold input
 		Desired = np.zeros((1, self.Top[2]))
 		fx = np.zeros(size)
-		prob = np.zeros(size)
+		prob = np.zeros((size,self.Top[2]))
 
 		for i in range(0, size):  # to see what fx is produced by your current weight update
 			Input = data[i, 0:self.Top[0]]
 			self.ForwardPass(Input)
 			fx[i] = self.pred_class
-			prob[i] = self.softmax()
+			prob[i] = self.out
 
 		return fx, prob
 
@@ -175,13 +175,14 @@ class ptReplica(multiprocessing.Process):
 		y = data[:, self.topology[0]]
 		fx, prob = fnn.evaluate_proposal(data,w)
 		rmse = self.rmse(fx,y)
-		# z = np.zeros(data.shape[0],self.topology[2])
-		# for i in range(data.shape[0]):
-		# 	for j in range(self.topology[2]):
-		# 		if fx[i] == y[i]:
-		# 			z[i,j] = 1
-		loss = np.sum(np.log(prob))
-		return [np.sum(loss)/self.temperature, fx, rmse]
+		z = np.zeros((data.shape[0],self.topology[2]))
+		lhood = 0
+		for i in range(data.shape[0]):
+			for j in range(self.topology[2]):
+				if fx[i] == y[i]:
+					z[i,j] = 1
+				lhood += z[i,j]*prob[i,j]
+		return [lhood/self.temperature, fx, rmse]
 
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
 		h = self.topology[1]  # number hidden neurons
@@ -289,7 +290,7 @@ class ptReplica(multiprocessing.Process):
 				acc_train = self.accuracy(pred_train, y_train)
 				acc_test = self.accuracy(pred_test, y_test)
 				plt.plot(i,acc_train,'r.')
-				plt.plot(i,acc_test,'b')
+				plt.plot(i,acc_test,'b.')
 			else:
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = pos_w[i,]
@@ -703,7 +704,7 @@ def main():
 		output = 10
 		topology = [ip, hidden, output]
 
-		NumSample = 40000
+		NumSample = 80000
 		maxtemp = 20  
 		swap_ratio = 0.125
 		num_chains = 2  
