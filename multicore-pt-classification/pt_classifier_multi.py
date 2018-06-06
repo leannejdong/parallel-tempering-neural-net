@@ -137,7 +137,7 @@ class Network:
 			fx[i] = self.pred_class
 			prob[i] = self.softmax(self.out)
 
-		return fx
+		return fx, prob
 
 class ptReplica(multiprocessing.Process):
 
@@ -660,43 +660,28 @@ def make_directory (directory):
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(1,2):
-		problem =	2
-		if problem ==	1:
-			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
-			name	= "Lazer"
-		if problem ==	2:
-			traindata = np.loadtxt(  "Data_OneStepAhead/Sunspot/train.txt")
-			testdata	= np.loadtxt( "Data_OneStepAhead/Sunspot/test.txt")	#
-			name	= "Sunspot"
-		if problem ==	3:
-			traindata = np.loadtxt("Data_OneStepAhead/Mackey/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Mackey/test.txt")  #
-			name	= "Mackey"
-		if problem ==	4:
-			traindata = np.loadtxt("Data_OneStepAhead/Lorenz/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Lorenz/test.txt")  #
-			name	= "Lorenz"
-		if problem ==	5:
-			traindata = np.loadtxt( "Data_OneStepAhead/Rossler/train.txt")
-			testdata	= np.loadtxt( "Data_OneStepAhead/Rossler/test.txt")	#
-			name	= "Rossler"
-		if problem ==	6:
-			traindata = np.loadtxt("Data_OneStepAhead/Henon/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Henon/test.txt")	#
-			name	= "Henon"
-		if problem ==	7:
-			traindata = np.loadtxt("Data_OneStepAhead/ACFinance/train.txt") 
-			testdata	= np.loadtxt("Data_OneStepAhead/ACFinance/test.txt")	#
-			name	= "ACFinance"
-		
+		#DATA PREPROCESSING 
+		data  = np.genfromtxt('winequality-red.csv',delimiter=';')
+		data = data[1:,:] #remove Labels
+		classes = data[:,11].reshape(data.shape[0],1)
+		features = data[:,0:10]
+		#Normalizing Data
+		for k in range(10):
+			mean = np.mean(features[:,k])
+			dev = np.std(features[:,k])
+			features[:,k] = (features[:,k]-mean)/dev
+		#Separating data to train and test
+		train_ratio = 0.8 #Choosable
+		indices = numpy.random.permutation(features.shape[0])
+		traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
+		testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
 		###############################
 
-		hidden = 5
-		ip = 4 #input
-		output = 1
+		hidden = 40
+		ip = 11 #input
+		output = 10
 		topology = [ip, hidden, output]
 
 		NumSample = 200000
