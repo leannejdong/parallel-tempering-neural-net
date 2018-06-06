@@ -96,8 +96,8 @@ class Network:
 		w = np.concatenate([w1, w2, self.B1, self.B2])
 		return w
 
-	def softmax(self.out):
-		prob = np.exp(self.out(self.pred_class))/np.sum(np.exp(self.out))
+	def softmax(self):
+		prob = np.exp(self.out[self.pred_class])/np.sum(np.exp(self.out))
 		return prob
 
 	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
@@ -135,7 +135,7 @@ class Network:
 			Input = data[i, 0:self.Top[0]]
 			self.ForwardPass(Input)
 			fx[i] = self.pred_class
-			prob[i] = self.softmax(self.out)
+			prob[i] = self.softmax()
 
 		return fx, prob
 
@@ -163,11 +163,24 @@ class ptReplica(multiprocessing.Process):
 	def rmse(self, pred, actual):
 		return np.sqrt(((pred-actual)**2).mean())
 
+	def accuracy(self,pred,actual):
+		count = 0
+		for i in range(pred.shape[0]):
+			if pred[i] == actual[i]:
+				count+=1
+		return 100*(count/pred.shape[0])
+
+
 	def likelihood_func(self, fnn, data, w, tau_sq):
 		y = data[:, self.topology[0]]
-		fx = fnn.evaluate_proposal(data,w)
-		rmse = self.rmse(fx, y)
-		loss = np.sum(-0.5*np.log(2*math.pi*tau_sq) - 0.5*np.square(y-fx)/tau_sq)
+		fx, prob = fnn.evaluate_proposal(data,w)
+		rmse = self.rmse(fx,y)
+		# z = np.zeros(data.shape[0],self.topology[2])
+		# for i in range(data.shape[0]):
+		# 	for j in range(self.topology[2]):
+		# 		if fx[i] == y[i]:
+		# 			z[i,j] = 1
+		loss = np.sum(np.log(prob))
 		return [np.sum(loss)/self.temperature, fx, rmse]
 
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
@@ -211,8 +224,8 @@ class ptReplica(multiprocessing.Process):
 		#Declare FNN
 		fnn = Network(self.topology, self.traindata, self.testdata, learn_rate)
 		#Evaluate Proposals
-		pred_train = fnn.evaluate_proposal(self.traindata,w)
-		pred_test = fnn.evaluate_proposal(self.testdata, w)
+		pred_train, prob_train = fnn.evaluate_proposal(self.traindata,w) #	
+		pred_test, prob_test = fnn.evaluate_proposal(self.testdata, w) #
 		#Check Variance of Proposal
 		eta = np.log(np.var(pred_train - y_train))
 		tau_pro = np.exp(eta)
@@ -228,8 +241,7 @@ class ptReplica(multiprocessing.Process):
 		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w, tau_pro)
 		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w, tau_pro)
 		#Beginning Sampling using MCMC RANDOMWALK
-		plt.plot(x_train, y_train)
-
+		fig = plt.figure()
 		accept_list = open(self.path+'/acceptlist_'+str(self.temperature)+'.txt', "a+")
 
 
@@ -258,7 +270,7 @@ class ptReplica(multiprocessing.Process):
 				mh_prob = 1
 
 			u = random.uniform(0, 1)
-		
+			
 
 			if u < mh_prob:
 				naccept  =  naccept + 1
@@ -274,7 +286,10 @@ class ptReplica(multiprocessing.Process):
 				fxtest_samples[i + 1,] = pred_test
 				rmse_train[i + 1,] = rmsetrain
 				rmse_test[i + 1,] = rmsetest
-				plt.plot(x_train, pred_train)
+				acc_train = self.accuracy(pred_train, y_train)
+				acc_test = self.accuracy(pred_test, y_test)
+				plt.plot(i,acc_train,'r.')
+				plt.plot(i,acc_test,'b')
 			else:
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = pos_w[i,]
@@ -307,11 +322,14 @@ class ptReplica(multiprocessing.Process):
 		self.parameter_queue.put(param)
 		make_directory(self.path+'/results')
 		make_directory(self.path+'/posterior')
+		acc_train = self.accuracy(pred_train, y_train)
+		acc_test = self.accuracy(pred_test, y_test)
+		print (self.temperature,"Test accuracy:",acc_test,"Train accuracy:",acc_train)
 		print ((naccept*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = naccept / (samples * 1.0) * 100
-		# plt.title("Plot of Accepted Proposals")
-		# plt.savefig(self.path+'/results/proposals.png')
-		# plt.clf()
+		plt.title("Plot of accuracy")
+		plt.savefig(self.path+'/results/'+str(self.temperature)+'acc.png')
+		plt.close()
 		#SAVING PARAMETERS
 		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name,pos_w ) 
@@ -647,8 +665,8 @@ class ParallelTempering:
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		fx_test = fxtest_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.testdata.shape[0])
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		for s in range(self.num_param):  
-			self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
+		# for s in range(self.num_param):  
+		# 	self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
 		print("NUMBER OF SWAPS =", self.num_swap)
 		print("SWAP ACCEPTANCE = ", self.num_swap*100/self.total_swap_proposals," %")
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
@@ -658,6 +676,7 @@ def make_directory (directory):
 		os.makedirs(directory)
 
 def main():
+	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(1,2):
 		#DATA PREPROCESSING 
@@ -672,7 +691,7 @@ def main():
 			features[:,k] = (features[:,k]-mean)/dev
 		#Separating data to train and test
 		train_ratio = 0.8 #Choosable
-		indices = numpy.random.permutation(features.shape[0])
+		indices = np.random.permutation(features.shape[0])
 		traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
 		testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
 		###############################
@@ -680,21 +699,21 @@ def main():
 		###############################
 
 		hidden = 40
-		ip = 11 #input
+		ip = 10 #input
 		output = 10
 		topology = [ip, hidden, output]
 
-		NumSample = 200000
+		NumSample = 40000
 		maxtemp = 20  
 		swap_ratio = 0.125
-		num_chains = 20  
+		num_chains = 2  
 		burn_in = 0.2
 
 		###############################
 
 		swap_interval =  int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-		path = "RESULTS/NUM CHAIN (Linear increment)/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		path = "RESULTS/results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
 		make_directory(path)
 		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)
@@ -728,10 +747,10 @@ def main():
 		ytestdata = testdata[:, ip]
 		ytraindata = traindata[:, ip]
 
-		plt.plot(x_test, ytestdata, label='actual')
-		plt.plot(x_test, fx_mu, label='pred. (mean)')
-		plt.plot(x_test, fx_low, label='pred.(5th percen.)')
-		plt.plot(x_test, fx_high, label='pred.(95th percen.)')
+		plt.plot(x_test, ytestdata,'.', label='actual')
+		plt.plot(x_test, fx_mu, '.', label='pred. (mean)')
+		plt.plot(x_test, fx_low, '.', label='pred.(5th percen.)')
+		plt.plot(x_test, fx_high, '.', label='pred.(95th percen.)')
 		plt.fill_between(x_test, fx_low, fx_high, facecolor='g', alpha=0.4)
 		plt.legend(loc='upper right')
 
@@ -740,10 +759,10 @@ def main():
 		plt.savefig(path+'/restest.svg', format='svg', dpi=600)
 		plt.clf()
 		# -----------------------------------------
-		plt.plot(x_train, ytraindata, label='actual')
-		plt.plot(x_train, fx_mu_tr, label='pred. (mean)')
-		plt.plot(x_train, fx_low_tr, label='pred.(5th percen.)')
-		plt.plot(x_train, fx_high_tr, label='pred.(95th percen.)')
+		plt.plot(x_train, ytraindata, '.',label='actual')
+		plt.plot(x_train, fx_mu_tr, '.',label='pred. (mean)')
+		plt.plot(x_train, fx_low_tr, '.',label='pred.(5th percen.)')
+		plt.plot(x_train, fx_high_tr, '.',label='pred.(95th percen.)')
 		plt.fill_between(x_train, fx_low_tr, fx_high_tr, facecolor='g', alpha=0.4)
 		plt.legend(loc='upper right')
 
