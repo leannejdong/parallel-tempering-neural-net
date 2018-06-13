@@ -668,8 +668,8 @@ def make_directory (directory):
 def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,7):
-		problem = i
+	for i in range(3,4):
+		problem = 6
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -828,7 +828,7 @@ def main():
 
 		# plt.clf()
 		#dir()
-		gc.collect()
+		#gc.collect()
 		outres.close()
 	resultingfile.close()
 
