@@ -54,6 +54,9 @@ class Network:
 		self.pred_class = np.argmax(self.out)
 
 	def BackwardPass(self, Input, desired):
+		onehot = np.zeros((desired.size, self.Top[2]))
+		onehot[np.arange(desired.size),int(desired)] = 1
+		desired = onehot
 		out_delta = (desired - self.out)*(self.out*(1 - self.out))
 		hid_delta = np.dot(out_delta,self.W2.T) * (self.hidout * (1 - self.hidout))
 		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
@@ -156,8 +159,7 @@ class ptReplica(multiprocessing.Process):
 				count+=1
 		return 100*(count/pred.shape[0])
 
-
-	def likelihood_func(self, fnn, data, w, tau_sq):
+	def likelihood_func(self, fnn, data, w):
 		y = data[:, self.topology[0]]
 		fx, prob = fnn.evaluate_proposal(data,w)
 		rmse = self.rmse(fx,y)
@@ -170,12 +172,12 @@ class ptReplica(multiprocessing.Process):
 				lhood += z[i,j]*np.log(prob[i,j])
 		return [lhood/self.temperature, fx, rmse]
 
-	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
+	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
 		h = self.topology[1]  # number hidden neurons
 		d = self.topology[0]  # number input neurons
-		part1 = -1 * ((d * h + h + 2) / 2) * np.log(sigma_squared)
+		part1 = -1 * ((d * h + h + self.topology[2]+1) / 2) * np.log(sigma_squared)
 		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
-		log_loss = part1 - part2  - (1 + nu_1) * np.log(tausq) - (nu_2 / tausq)
+		log_loss = part1 - part2
 		return log_loss
 
 	def run(self):
@@ -192,30 +194,29 @@ class ptReplica(multiprocessing.Process):
 		
 		w_size = (netw[0] * netw[1]) + (netw[1] * netw[2]) + netw[1] + netw[2]  # num of weights and bias
 		pos_w = np.ones((samples, w_size)) #Posterior for all weights
-		pos_tau = np.ones((samples,1)) #Tau is the variance of difference in predicted and actual values
 		
 		fxtrain_samples = np.ones((samples, trainsize)) #Output of regression FNN for training samples
 		fxtest_samples = np.ones((samples, testsize)) #Output of regression FNN for testing samples
 		rmse_train  = np.zeros(samples)
 		rmse_test = np.zeros(samples)
+		acc_train = np.zeros(samples)
+		acc_test = np.zeros(samples)
 		learn_rate = 0.5
 
 		naccept = 0
 		#Random Initialisation of weights
 		w = self.w
+		eta = 0 #Junk variable 
 		#print(w,self.temperature)
 		w_proposal = np.random.randn(w_size)
 		#Randomwalk Steps
 		step_w = 0.025
-		step_eta = 0.2
 		#Declare FNN
 		fnn = Network(self.topology, self.traindata, self.testdata, learn_rate)
 		#Evaluate Proposals
 		pred_train, prob_train = fnn.evaluate_proposal(self.traindata,w) #	
 		pred_test, prob_test = fnn.evaluate_proposal(self.testdata, w) #
 		#Check Variance of Proposal
-		eta = np.log(np.var(pred_train - y_train))
-		tau_pro = np.exp(eta)
 		sigma_squared = 25
 		nu_1 = 0
 		nu_2 = 0
@@ -223,10 +224,10 @@ class ptReplica(multiprocessing.Process):
 		np.fill_diagonal(sigma_diagmat, step_w)
 
 		delta_likelihood = 0.5 # an arbitrary position
-		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w, tau_pro)  # takes care of the gradients
+		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w)  # takes care of the gradients
 		#Evaluate Likelihoods
-		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w, tau_pro)
-		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w, tau_pro)
+		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w)
+		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
 		#Beginning Sampling using MCMC RANDOMWALK
 		fig = plt.figure()
 		accept_list = open(self.path+'/acceptlist_'+str(self.temperature)+'.txt', "a+")
@@ -236,17 +237,15 @@ class ptReplica(multiprocessing.Process):
 		for i in range(samples-1):
 			#GENERATING SAMPLE
 			w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
-			w_proposal = np.random.normal(w, step_w, w_size) # Eq 7
+			w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
 			w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth)
 			
 			diff_prop =  np.log(multivariate_normal.pdf(w, w_prop_gd, sigma_diagmat)  - np.log(multivariate_normal.pdf(w_proposal, w_gd, sigma_diagmat)))
 
-			eta_pro = eta + np.random.normal(0, step_eta, 1)
-			tau_pro = math.exp(eta_pro)
-
-			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal,tau_pro)
-			[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal,tau_pro)
-			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal,tau_pro)  # takes care of the gradients
+			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal)
+			
+			[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal)
+			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal)  # takes care of the gradients
 			diff_prior = prior_prop - prior_current
 			diff_likelihood = likelihood_proposal - likelihood
 			#ACCEPTANCE OF SAMPLE
@@ -255,53 +254,41 @@ class ptReplica(multiprocessing.Process):
 				mh_prob = min(1, math.exp(diff_likelihood + diff_prior + diff_prop))
 			except OverflowError:
 				mh_prob = 1
-
 			u = random.uniform(0, 1)
-			
-
 			if u < mh_prob:
 				naccept  =  naccept + 1
 				likelihood = likelihood_proposal
 				prior_current = prior_prop
 				w = w_proposal
-				eta = eta_pro
 				#print (i,'accepted')
 				accept_list.write('{} {} {} {} {} {} {}\n'.format(self.temperature,naccept, i, rmsetrain, rmsetest, diff_likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = w_proposal
-				pos_tau[i + 1,] = tau_pro
 				fxtrain_samples[i + 1,] = pred_train
 				fxtest_samples[i + 1,] = pred_test
 				rmse_train[i + 1,] = rmsetrain
 				rmse_test[i + 1,] = rmsetest
-				acc_train = self.accuracy(pred_train, y_train)
-				acc_test = self.accuracy(pred_test, y_test)
-				plt.plot(i,acc_train,'r.')
-				plt.plot(i,acc_test,'b.')
-				trainacc += acc_train/samples
-				testacc += acc_test/samples
+				acc_train[i+1,] = self.accuracy(pred_train, y_train)
+				acc_test[i+1,] = self.accuracy(pred_test, y_test)
 				
 			else:
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = pos_w[i,]
-				pos_tau[i + 1,] = pos_tau[i,]
 				fxtrain_samples[i + 1,] = fxtrain_samples[i,]
 				fxtest_samples[i + 1,] = fxtest_samples[i,]
 				rmse_train[i + 1,] = rmse_train[i,]
 				rmse_test[i + 1,] = rmse_test[i,]
-			#print('INITIAL W(PROP) BEFORE SWAP',self.temperature,w_proposal,i,rmsetrain)
-			#print('INITIAL W BEFORE SWAP',self.temperature,i,w)
+				acc_train[i+1,] = acc_train[i,]
+				acc_test[i+1,] = acc_test[i,]
 			#SWAPPING PREP
 			if (i%self.swap_interval == 0):
 				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
 				self.event.wait()
-				#print(i, self.temperature)
 				# retrieve parameters fom queues if it has been swapped
 				if not self.parameter_queue.empty() : 
 					try:
 						result =  self.parameter_queue.get()
-						#print(self.temperature, w, 'param after swap')
 						w= result[0:w.size]     
 						eta = result[w.size]
 						likelihood = result[w.size+1]
@@ -312,13 +299,13 @@ class ptReplica(multiprocessing.Process):
 		self.parameter_queue.put(param)
 		make_directory(self.path+'/results')
 		make_directory(self.path+'/posterior')
-		acc_train = self.accuracy(pred_train, y_train)
-		acc_test = self.accuracy(pred_test, y_test)
-		print (self.temperature,"Test accuracy:",testacc,"Train accuracy:",trainacc)
 		print ((naccept*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = naccept / (samples * 1.0) * 100
-		plt.title("Plot of accuracy")
-		plt.savefig(self.path+'/results/'+str(self.temperature)+'acc.png')
+		fig = plt.figure()
+		plt.plot(acc_train, label="Train")
+		plt.plot(acc_test, label="Test")
+		plt.legend()
+		plt.savefig(self.path+'/accuracy'+str(self.temperature)+'.pdf')
 		plt.close()
 		#SAVING PARAMETERS
 		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
@@ -330,7 +317,11 @@ class ptReplica(multiprocessing.Process):
 		file_name = self.path+'/posterior/rmse_test_chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name, rmse_test, fmt='%1.2f')		
 		file_name = self.path+'/posterior/rmse_train_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, rmse_train, fmt='%1.2f')		
+		np.savetxt(file_name, rmse_train, fmt='%1.2f')
+		file_name = self.path+'/posterior/acc_train_chain_'+ str(self.temperature)+ '.txt'
+		np.savetxt(file_name, acc_train, fmt='%1.2f')	
+		file_name = self.path+'/posterior/acc_test_chain_'+ str(self.temperature)+ '.txt'
+		np.savetxt(file_name, acc_test, fmt='%1.2f')			
 		file_name = self.path + '/posterior/accept_list_chain_' + str(self.temperature) + '_accept.txt'
 		np.savetxt(file_name, [accept_ratio], fmt='%1.2f')
 
@@ -567,7 +558,6 @@ class ParallelTempering:
 		# create parameter holders for paramaters that will be swapped
 		replica_param = np.zeros((self.num_chains, self.num_param))  
 		lhood = np.zeros(self.num_chains)
-		eta = np.zeros(self.num_chains)
 		# Define the starting and ending of MCMC Chains
 		start = 0
 		end = self.NumSamples-1
@@ -625,8 +615,10 @@ class ParallelTempering:
 		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param))
 		fxtrain_samples = np.zeros((self.num_chains,self.NumSamples - burnin, self.traindata.shape[0]))
 		rmse_train = np.zeros((self.num_chains,self.NumSamples - burnin))
+		acc_train = np.zeros((self.num_chains,self.NumSamples - burnin))
 		fxtest_samples = np.zeros((self.num_chains,self.NumSamples - burnin, self.testdata.shape[0]))
 		rmse_test = np.zeros((self.num_chains,self.NumSamples - burnin))
+		acc_test = np.zeros((self.num_chains,self.NumSamples - burnin))
 		accept_ratio = np.zeros((self.num_chains,1))
 
 		for i in range(self.num_chains):
@@ -645,6 +637,12 @@ class ParallelTempering:
 			file_name = self.path+'/posterior/rmse_train_chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
 			rmse_train[i,:] = dat[burnin:]
+			file_name = self.path+'/posterior/acc_train_chain_'+ str(self.temperatures[i])+ '.txt'
+			dat = np.loadtxt(file_name)
+			acc_train[i,:] = dat[burnin:]
+			file_name = self.path+'/posterior/acc_test_chain_'+ str(self.temperatures[i])+ '.txt'
+			dat = np.loadtxt(file_name)
+			acc_test[i,:] = dat[burnin:]
 			file_name = self.path + '/posterior/accept_list_chain_' + str(self.temperatures[i]) + '_accept.txt'
 			dat = np.loadtxt(file_name)
 			accept_ratio[i,:] = dat
@@ -653,8 +651,10 @@ class ParallelTempering:
 		accept_total = np.sum(accept_ratio)/self.num_chains
 		fx_train = fxtrain_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.traindata.shape[0])
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
+		acc_train = acc_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		fx_test = fxtest_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.testdata.shape[0])
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
+		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		# for s in range(self.num_param):  
 		# 	self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
 		print("NUMBER OF SWAPS =", self.num_swap)
@@ -668,8 +668,8 @@ def make_directory (directory):
 def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,2):
-		problem = 4
+	for i in range(1,7):
+		problem = i
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -679,20 +679,32 @@ def main():
 			features = data[:,0:11]
 			separate_flag = True
 			name = "winequality-red"
+			hidden = 50
+			ip = 11 #input
+			output = 10
 		if problem == 2: #IRIS
 			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
 			classes = data[:,4].reshape(data.shape[0],1)-1
 			features = data[:,0:4]
 			separate_flag = True
 			name = "iris"
+			hidden = 12
+			ip = 4 #input
+			output = 3
 		if problem == 3: #Ionosphere
 			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
 			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
 			name = "Ionosphere"
+			hidden = 50
+			ip = 34 #input
+			output = 2
 		if problem == 4: #Cancer
 			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
 			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
 			name = "Cancer"
+			hidden = 12
+			ip = 9 #input
+			output = 2
 		if problem == 5: #Wine Quality White
 			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
 			data = data[1:,:] #remove Labels
@@ -700,20 +712,24 @@ def main():
 			features = data[:,0:11]
 			separate_flag = True
 			name = "winequality-white"
+			hidden = 50
+			ip = 11 #input
+			output = 10
 		if problem == 6:
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
 			classes = data[:,20].reshape(data.shape[0],1)
 			features = data[:,0:20]
 			separate_flag = True
 			name = "bank-additional"
+			hidden = 50
+			ip = 20 #input
+			output = 2
 
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
 		###############################
 
-		hidden = 12
-		ip = 9 #input
-		output = 2
+		
 		topology = [ip, hidden, output]
 
 		NumSample = 2000
