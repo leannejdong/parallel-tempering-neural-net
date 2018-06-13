@@ -675,7 +675,7 @@ def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(1,2):
-		problem = 5
+		problem = 6
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -708,20 +708,26 @@ def main():
 			features = data[:,0:11]
 			separate_flag = True
 			name = "winequality-white"
+		if problem == 6:
+			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
+			classes = data[:,20].reshape(data.shape[0],1)
+			features = data[:,0:20]
+			separate_flag = True
+			name = "bank-additional"
 
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
 		###############################
 
 		hidden = 50
-		ip = 11 #input
-		output = 10
+		ip = 20 #input
+		output = 2
 		topology = [ip, hidden, output]
 
-		NumSample = 8000*10
+		NumSample = 8000
 		maxtemp = 20 
 		swap_ratio = 0.125
-		num_chains = 10
+		num_chains = 2
 		burn_in = 0.2
 
 		###############################

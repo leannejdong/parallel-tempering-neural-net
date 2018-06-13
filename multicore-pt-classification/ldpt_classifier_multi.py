@@ -54,11 +54,12 @@ class Network:
 		self.pred_class = np.argmax(self.out)
 
 	def BackwardPass(self, Input, desired):
-		out_delta = (desired - self.out) * (self.out * (1 - self.out))
-		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1 - self.hidout))
-		self.W2 += (self.hidout.T.dot(out_delta) * self.lrate)
+		out_delta = (desired - self.out)*(self.out*(1 - self.out))
+		hid_delta = np.dot(out_delta,self.W2.T) * (self.hidout * (1 - self.hidout))
+		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
 		self.B2 += (-1 * self.lrate * out_delta)
-		self.W1 += (Input.T.dot(hid_delta) * self.lrate)
+		Input = Input.reshape(1,self.Top[0])
+		self.W1 += np.dot(Input.T,(hid_delta * self.lrate))
 		self.B1 += (-1 * self.lrate * hid_delta)
 
 	def decode(self, w):
@@ -76,8 +77,11 @@ class Network:
 
 	def encode(self):
 		w1 = self.W1.ravel()
+		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w = np.concatenate([w1, w2, np.squeeze(self.B1), np.squeeze(self.B2)])
+		w2 = w2.reshape(1,w2.shape[0])
+		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
+		w = w.reshape(-1)
 		return w
 
 	def softmax(self):
@@ -96,7 +100,7 @@ class Network:
 		for i in range(0, depth):
 			for i in range(0, size):
 				pat = i
-				Input = data[pat, 0:self.Top[0]].reshape(1,self.Top[0])
+				Input = data[pat, 0:self.Top[0]]
 				Desired = data[pat, self.Top[0]:]
 				self.ForwardPass(Input)
 				self.BackwardPass(Input, Desired)
@@ -665,44 +669,76 @@ def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(1,2):
+		problem = 4
+		separate_flag = False
 		#DATA PREPROCESSING 
-		# data  = np.genfromtxt('winequality-red.csv',delimiter=';')
-		# data = data[1:,:] #remove Labels
-		# classes = data[:,11].reshape(data.shape[0],1)
-		# features = data[:,0:11]
-		data  = np.genfromtxt('iris.csv',delimiter=';')
-		classes = data[:,4].reshape(data.shape[0],1)-1
-		features = data[:,0:4]
-		#Normalizing Data
-		for k in range(4):
-			mean = np.mean(features[:,k])
-			dev = np.std(features[:,k])
-			features[:,k] = (features[:,k]-mean)/dev
-		#Separating data to train and test
-		train_ratio = 0.6 #Choosable
-		indices = np.random.permutation(features.shape[0])
-		traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
-		testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
+		if problem == 1: #Wine Quality White
+			data  = np.genfromtxt('DATA/winequality-red.csv',delimiter=';')
+			data = data[1:,:] #remove Labels
+			classes = data[:,11].reshape(data.shape[0],1)
+			features = data[:,0:11]
+			separate_flag = True
+			name = "winequality-red"
+		if problem == 2: #IRIS
+			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
+			classes = data[:,4].reshape(data.shape[0],1)-1
+			features = data[:,0:4]
+			separate_flag = True
+			name = "iris"
+		if problem == 3: #Ionosphere
+			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
+			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
+			name = "Ionosphere"
+		if problem == 4: #Cancer
+			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
+			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
+			name = "Cancer"
+		if problem == 5: #Wine Quality White
+			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
+			data = data[1:,:] #remove Labels
+			classes = data[:,11].reshape(data.shape[0],1)
+			features = data[:,0:11]
+			separate_flag = True
+			name = "winequality-white"
+		if problem == 6:
+			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
+			classes = data[:,20].reshape(data.shape[0],1)
+			features = data[:,0:20]
+			separate_flag = True
+			name = "bank-additional"
+
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
 		###############################
 
-		hidden = 50
-		ip = 4 #input
-		output = 3
+		hidden = 12
+		ip = 9 #input
+		output = 2
 		topology = [ip, hidden, output]
 
-		NumSample = 20000
-		maxtemp = 2 
+		NumSample = 2000
+		maxtemp = 20 
 		swap_ratio = 0.125
 		num_chains = 2
 		burn_in = 0.2
 
 		###############################
 
+		#Separating data to train and test
+		if separate_flag is True:
+			#Normalizing Data
+			for k in range(ip):
+				mean = np.mean(features[:,k])
+				dev = np.std(features[:,k])
+				features[:,k] = (features[:,k]-mean)/dev
+			train_ratio = 0.6 #Choosable
+			indices = np.random.permutation(features.shape[0])
+			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
+			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
+
 		swap_interval =  int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-		path = "RESULTS/iris_ldresults_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		path = "RESULTS/ld_"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
 		make_directory(path)
 		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)

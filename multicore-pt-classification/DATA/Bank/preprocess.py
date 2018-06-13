@@ -7,7 +7,7 @@ import pandas as pd
 def load_data(filename):
     df = pd.read_csv(filename, sep=";")
     cols_numerical = list(df.columns[(df.dtypes=="int")|(df.dtypes=="float")])
-    cols_categorical = list(df.columns[df.dtypes=="object"].drop("y"))
+    cols_categorical = list(df.columns[df.dtypes=="object"].drop('y'))
 
     # Output labels (success/failure)
     y = pd.get_dummies(df["y"])["yes"].values.astype("float32")
@@ -19,6 +19,6 @@ def load_data(filename):
         X = pd.concat((X, pd.get_dummies(df[name])), axis=1)
     return X.values.astype("float32"), np.reshape(y, (-1,1))
 
-X, y = load_data("./bank-additional-full.csv")
+X, y = load_data("./bank.csv")
 print("X:{}, y:{}".format(X.shape, y.shape))
-np.savetxt('bank-additional-full-processed.csv',np.hstack((X,y)),delimiter=';')
+np.savetxt('bank-processed.csv',np.hstack((X,y)),delimiter=';')
