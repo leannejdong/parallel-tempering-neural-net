@@ -94,7 +94,7 @@ class Network:
         Desired = np.zeros((1, self.Top[2]))
         fx = np.zeros(size)
 
-        for pat in xrange(0, size):
+        for pat in range(0, size):
             Input[:] = data[pat, 0:self.Top[0]]
             Desired[:] = data[pat, self.Top[0]:]
 
@@ -115,6 +115,8 @@ class MCMC:
         self.topology = topology  # max epocs
         self.traindata = traindata  #
         self.testdata = testdata
+        self.num_param = (topology[0] * topology[1]) + (topology[1] * topology[2]) + topology[1] + topology[2]
+        self.path = "mcmcresults"   
         # ----------------
 
     def rmse(self, predictions, targets):
@@ -135,6 +137,60 @@ class MCMC:
         log_loss = part1 - part2 - (1 + nu_1) * np.log(tausq) - (nu_2 / tausq)
         return log_loss
 
+    def plot_figure(self, list, title): 
+
+        list_points =  list
+
+        fname = self.path
+        width = 9 
+
+        font = 9
+
+        fig = plt.figure(figsize=(10, 12))
+        ax = fig.add_subplot(111)
+ 
+
+        slen = np.arange(0,len(list),1) 
+         
+        fig = plt.figure(figsize=(10,12))
+        ax = fig.add_subplot(111)
+        ax.spines['top'].set_color('none')
+        ax.spines['bottom'].set_color('none')
+        ax.spines['left'].set_color('none')
+        ax.spines['right'].set_color('none')
+        ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+        ax.set_title(' Posterior distribution', fontsize=  font+2)#, y=1.02)
+    
+        ax1 = fig.add_subplot(211) 
+
+        n, rainbins, patches = ax1.hist(list_points,  bins = 20,  alpha=0.5, facecolor='sandybrown', normed=False)  
+ 
+  
+        color = ['blue','red', 'pink', 'green', 'purple', 'cyan', 'orange','olive', 'brown', 'black']
+
+        ax1.grid(True)
+        ax1.set_ylabel('Frequency',size= font+1)
+        ax1.set_xlabel('Parameter values', size= font+1)
+    
+        ax2 = fig.add_subplot(212)
+
+        list_points = np.asarray(np.split(list_points,  1 ))
+ 
+
+ 
+
+        ax2.set_facecolor('#f2f2f3') 
+        ax2.plot( list_points.T , label=None)
+        ax2.set_title(r'Trace plot',size= font+2)
+        ax2.set_xlabel('Samples',size= font+1)
+        ax2.set_ylabel('Parameter values', size= font+1) 
+
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.88)
+         
+ 
+        plt.savefig(fname + '/' + title  + '_pos_.png', bbox_inches='tight', dpi=300, transparent=False)
+        plt.clf()
     def sampler(self):
 
         # ------------------- initialize MCMC
@@ -148,8 +204,6 @@ class MCMC:
         netw = self.topology  # [input, hidden, output]
         y_test = self.testdata[:, netw[0]]
         y_train = self.traindata[:, netw[0]]
-        print y_train.size
-        print y_test.size
 
         w_size = (netw[0] * netw[1]) + (netw[1] * netw[2]) + netw[1] + netw[2]  # num of weights and bias
 
@@ -169,7 +223,6 @@ class MCMC:
         # --------------------- Declare FNN and initialize
 
         neuralnet = Network(self.topology, self.traindata, self.testdata)
-        print 'evaluate Initial w'
 
         pred_train = neuralnet.evaluate_proposal(self.traindata, w)
         pred_test = neuralnet.evaluate_proposal(self.testdata, w)
@@ -186,10 +239,8 @@ class MCMC:
         [likelihood, pred_train, rmsetrain] = self.likelihood_func(neuralnet, self.traindata, w, tau_pro)
         [likelihood_ignore, pred_test, rmsetest] = self.likelihood_func(neuralnet, self.testdata, w, tau_pro)
 
-        print likelihood
 
         naccept = 0
-        print 'begin sampling using mcmc random walk'
         plt.plot(x_train, y_train)
         plt.plot(x_train, pred_train)
         plt.title("Plot of Data vs Initial Fx")
@@ -224,14 +275,12 @@ class MCMC:
 
             if u < mh_prob:
                 # Update position
-                print    i, ' is accepted sample'
+                
                 naccept += 1
                 likelihood = likelihood_proposal
                 prior_likelihood = prior_prop
                 w = w_proposal
                 eta = eta_pro
-
-                print  likelihood, prior_likelihood, rmsetrain, rmsetest, w, 'accepted'
 
                 pos_w[i + 1,] = w_proposal
                 pos_tau[i + 1,] = tau_pro
@@ -252,11 +301,12 @@ class MCMC:
                 rmse_test[i + 1,] = rmse_test[i,]
 
                 # print i, 'rejected and retained'
-
-        print naccept, ' num accepted'
-        print naccept / (samples * 1.0), '% was accepted'
+        pos_w = pos_w.T.reshape(self.num_param,-1)
+        print (naccept, ' num accepted')
+        print (naccept / (samples * 1.0), '% was accepted')
         accept_ratio = naccept / (samples * 1.0) * 100
-
+        for s in range(self.num_param):  
+            self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s))
         plt.title("Plot of Accepted Proposals")
         plt.savefig('mcmcresults/proposals.png')
         plt.savefig('mcmcresults/proposals.svg', format='svg', dpi=600)
@@ -267,7 +317,7 @@ class MCMC:
 
 def main():
     outres = open('mcmcresults/resultspriors.txt', 'w')
-    for problem in xrange(2, 3): 
+    for problem in range(2, 3): 
 
         hidden = 5
         input = 4  #
@@ -291,13 +341,13 @@ def main():
 
         timer = time.time()
 
-        numSamples = 80000  # need to decide yourself
+        numSamples = 80000# need to decide yourself
 
         mcmc = MCMC(numSamples, traindata, testdata, topology)  # declare class
 
         [pos_w, pos_tau, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_ratio] = mcmc.sampler()
-        print 'sucessfully sampled'
-        print time.time()-timer, "Seconds taken"
+        print('sucessfully sampled')
+        print( time.time()-timer, "Seconds taken")
         burnin = 0.1 * numSamples  # use post burn in samples
 
         pos_w = pos_w[int(burnin):, ]
@@ -315,7 +365,7 @@ def main():
         rmsetr_std = np.std(rmse_train[int(burnin):])
         rmse_tes = np.mean(rmse_test[int(burnin):])
         rmsetest_std = np.std(rmse_test[int(burnin):])
-        print rmse_tr, rmsetr_std, rmse_tes, rmsetest_std
+        print(rmse_tr, rmsetr_std, rmse_tes, rmsetest_std)
         np.savetxt(outres, (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_ratio), fmt='%1.5f')
 
         ytestdata = testdata[:, input]
@@ -345,21 +395,21 @@ def main():
         plt.savefig('mcmcresults/mcmcrestrain.svg', format='svg', dpi=600)
         plt.clf()
 
-        mpl_fig = plt.figure()
-        ax = mpl_fig.add_subplot(111)
+        # mpl_fig = plt.figure()
+        # ax = mpl_fig.add_subplot(111)
 
-        ax.boxplot(pos_w)
+        # ax.boxplot(pos_w)
 
-        ax.set_xlabel('[W1] [B1] [W2] [B2]')
-        ax.set_ylabel('Posterior')
+        # ax.set_xlabel('[W1] [B1] [W2] [B2]')
+        # ax.set_ylabel('Posterior')
 
-        plt.legend(loc='upper right')
+        # plt.legend(loc='upper right')
 
-        plt.title("Boxplot of Posterior W (weights and biases)")
-        plt.savefig('mcmcresults/w_pos.png')
-        plt.savefig('mcmcresults/w_pos.svg', format='svg', dpi=600)
+        # plt.title("Boxplot of Posterior W (weights and biases)")
+        # plt.savefig('mcmcresults/w_pos.png')
+        # plt.savefig('mcmcresults/w_pos.svg', format='svg', dpi=600)
 
-        plt.clf()
+        # plt.clf()
 
 
 if __name__ == "__main__": main()

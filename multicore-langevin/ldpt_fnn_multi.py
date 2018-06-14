@@ -79,8 +79,11 @@ class Network:
 
 	def encode(self):
 		w1 = self.W1.ravel()
+		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w = np.concatenate([w1, w2, self.B1, self.B2])
+		w2 = w2.reshape(1,w2.shape[0])
+		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
+		w = w.reshape(-1)
 		return w
 
 	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
