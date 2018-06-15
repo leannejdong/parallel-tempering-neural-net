@@ -118,8 +118,171 @@ SWAP ACCEPTANCE =  [2.164638788533145]  %
 Successfully Regressed
 71.49499999999999 % total accepted
 
+RESULTS/ld_Ionosphere_results_20000_20_1_0.125
+1.0
+ldpt_classifier_multi.py:243: RuntimeWarning: invalid value encountered in log
+  diff_prop =  np.log(multivariate_normal.pdf(w, w_prop_gd, sigma_diagmat)  - np.log(multivariate_normal.pdf(w_proposal, w_gd, sigma_diagmat)))
+99.995 % was accepted
+accuracies [99.59] [96.33]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+100.0 % total accepted
+4279.318028926849 sec time taken
+0.060000000000000026 2.7755575615628914e-17 0.30791375 0.06144945126636608
+
+RESULTS/ld_Ionosphere_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+99.95 % was accepted
+25.05 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+accuracies [100.] [96.33]
+NUMBER OF SWAPS = 7316
+SWAP ACCEPTANCE =  [0.12208312933302495]  %
+Successfully Regressed
+92.46000000000001 % total accepted
+2598.9476749897003 sec time taken
+0.0032199999999999998 0.02234013428786855 0.29713625 0.02802831489650243
+
+RESULTS/Cancer_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+20.95 % was accepted
+79.1 % was accepted
+98.05 % was accepted
+88.9 % was accepted
+66.35 % was accepted
+90.45 % was accepted
+94.2 % was accepted
+20.2 % was accepted
+97.75 % was accepted
+71.1 % was accepted
+accuracies [96.73] [99.52]
+NUMBER OF SWAPS = 5133
+SWAP ACCEPTANCE =  [1.1527552264749674]  %
+Successfully Regressed
+72.705 % total accepted
+117.58297991752625 sec time taken
+0.3491425 0.1458831799548872 0.24984875000000004 0.17243524762483306
+
+RESULTS/Cancer_results_20000_20_1_0.125
+1.0
+93.275 % was accepted
+accuracies [96.93] [99.05]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+93.27 % total accepted
+549.02113032341 sec time taken
+0.5271593750000001 0.17465458654043234 0.3863549999999999 0.14293517403004763
+RESULTS/ld_Cancer_results_20000_20_1_0.125
+1.0
+ldpt_classifier_multi.py:243: RuntimeWarning: invalid value encountered in log
+  diff_prop =  np.log(multivariate_normal.pdf(w, w_prop_gd, sigma_diagmat)  - np.log(multivariate_normal.pdf(w_proposal, w_gd, sigma_diagmat)))
+99.995 % was accepted
+accuracies [99.18] [99.05]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+100.0 % total accepted
+3102.4576604366302 sec time taken
+0.09 0.0 0.13109375000000006 0.010793688476952638
+RESULTS/ld_Cancer_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+accuracies [99.39] [99.05]
+NUMBER OF SWAPS = 19506
+SWAP ACCEPTANCE =  [1.057784444288989]  %
+Successfully Regressed
+99.95000000000002 % total accepted
+1371.703385591507 sec time taken
+0.08803437500000001 0.021602779181377915 0.14282375 0.012930156067793613
+
+RESULTS/bank-additional_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+pt_classifier_multi.py:488: RuntimeWarning: overflow encountered in exp
+  swap_proposal =  min(1,0.5*np.exp(lhood2 - lhood1))
+31.4 % was accepted
+88.95 % was accepted
+47.9 % was accepted
+86.05 % was accepted
+82.8 % was accepted
+59.05 % was accepted
+37.95 % was accepted
+79.95 % was accepted
+13.35 % was accepted
+73.55 % was accepted
+accuracies [78.71] [78.39]
+NUMBER OF SWAPS = 73083
+SWAP ACCEPTANCE =  [0.5363787947076822]  %
+Successfully Regressed
+60.095000000000006 % total accepted
+2140.5334010124207 sec time taken
+0.521494375 0.03720985210074578 0.521165 0.035766154042614094
+
+RESULTS/bank-additional_results_20000_20_1_0.125
+1.0
+57.21 % was accepted
+accuracies [80.11] [79.25]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+57.21 % total accepted
+7915.2711181640625 sec time taken
+0.4527543750000001 0.004467344665388494 0.4624224999999999 0.004284447893252972
+
+
 ld bank additional [90.07] [83.37]
-102.43916249275208 sec time taken
-0.715298125 0.04749472203818414 0.821048125 0.21428257088243174
 
 

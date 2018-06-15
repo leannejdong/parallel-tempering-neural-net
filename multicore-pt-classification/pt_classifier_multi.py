@@ -616,6 +616,9 @@ class ParallelTempering:
 		for j in range(0,self.num_chains):
 			self.chains[j].join()
 		self.chain_queue.join()
+		for j in range(0,self.num_chains):
+			self.parameter_queue[i].close()
+			self.parameter_queue[i].join_thread()
 		#GETTING DATA
 		burnin = int(self.NumSamples*self.burn_in)
 		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param))
@@ -675,8 +678,8 @@ def make_directory (directory):
 def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(3,4):
-		problem = 7
+	for i in range(1):
+		problem = 6
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -733,7 +736,7 @@ def main():
 			output = 2
 		if problem == 7:
 			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
-			testdata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
+			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
 			name = "PenDigit"
 			for k in range(16):
 				mean_train = np.mean(traindata[:,k])
@@ -750,10 +753,10 @@ def main():
 		###############################
 		topology = [ip, hidden, output]
 
-		NumSample = 8000
+		NumSample = 20000
 		maxtemp = 20 
 		swap_ratio = 0.125
-		num_chains = 2
+		num_chains = 1
 		burn_in = 0.2
 
 		###############################
