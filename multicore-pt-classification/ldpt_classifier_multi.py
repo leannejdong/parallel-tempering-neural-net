@@ -657,8 +657,9 @@ class ParallelTempering:
 		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		# for s in range(self.num_param):  
 		# 	self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
+		print("accuracies", max(acc_train), max(acc_test))
 		print("NUMBER OF SWAPS =", self.num_swap)
-		print("SWAP ACCEPTANCE = ", self.num_swap*100/self.total_swap_proposals," %")
+		print("SWAP ACCEPTANCE = ", [0 if self.total_swap_proposals is 0 else self.num_swap*100/self.total_swap_proposals]," %")
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
 def make_directory (directory): 
@@ -669,7 +670,7 @@ def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(3,4):
-		problem = 6
+		problem = 3
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -732,10 +733,10 @@ def main():
 		
 		topology = [ip, hidden, output]
 
-		NumSample = 2000
+		NumSample = 20000
 		maxtemp = 20 
 		swap_ratio = 0.125
-		num_chains = 2
+		num_chains = 1
 		burn_in = 0.2
 
 		###############################

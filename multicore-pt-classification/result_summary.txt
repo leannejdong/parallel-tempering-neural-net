@@ -1,0 +1,125 @@
+RESULTS/iris_results_20000_20_1_0.125
+1.0
+95.62 % was accepted
+accuracies [90.] [90.08]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+95.62 % total accepted
+107.30130505561829 sec time taken
+0.51187125 0.06278802372616535 0.5663537499999999 0.08359638066888722
+
+RESULTS/iris_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+23.45 % was accepted
+97.5 % was accepted
+59.65 % was accepted
+96.65 % was accepted
+10.85 % was accepted
+71.3 % was accepted
+35.95 % was accepted
+99.0 % was accepted
+98.25 % was accepted
+99.3 % was accepted
+accuracies [85.56] [82.44]
+NUMBER OF SWAPS = 3429
+SWAP ACCEPTANCE =  [2.903692914786055]  %
+Successfully Regressed
+69.18999999999998 % total accepted
+40.87627911567688 sec time taken
+1.0883712500000002 0.3174680648087891 1.1440743749999998 0.3062040875271905
+
+RESULTS/ld_iris_results_20000_20_1_0.125
+1.0
+ldpt_classifier_multi.py:243: RuntimeWarning: invalid value encountered in log
+  diff_prop =  np.log(multivariate_normal.pdf(w, w_prop_gd, sigma_diagmat)  - np.log(multivariate_normal.pdf(w_proposal, w_gd, sigma_diagmat)))
+99.995 % was accepted
+accuracies [100.] [92.]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+100.0 % total accepted
+831.9045376777649 sec time taken
+0.0 0.0 0.351594375 0.017323804961941098
+
+RESULTS/ld_iris_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+99.95 % was accepted
+NUMBER OF SWAPS = 10557
+SWAP ACCEPTANCE =  0.922207672746872  %
+Successfully Regressed
+99.95000000000002 % total accepted
+accuracies [100.] [98.32]
+754.2741568088531 sec time taken
+0.017317500000000003 0.0434595121204783 0.13525437499999998 0.01669985908202147
+
+RESULTS/Ionosphere_results_20000_20_1_0.125
+1.0
+88.6 % was accepted
+accuracies [88.57] [96.33]
+NUMBER OF SWAPS = 0
+SWAP ACCEPTANCE =  [0]  %
+Successfully Regressed
+88.6 % total accepted
+300.91093468666077 sec time taken
+0.52372375 0.12128059896759044 0.399153125 0.11823420212753319
+
+RESULTS/Ionosphere_results_20000_20_10_0.125
+1.0
+1.3949507939624208
+1.945887717576389
+2.7144176165949068
+3.7864790094146477
+5.281951900505004
+7.368062997280774
+10.278085328021955
+14.337423288737734
+20.0
+94.45 % was accepted
+95.05 % was accepted
+95.95 % was accepted
+46.8 % was accepted
+96.0 % was accepted
+67.9 % was accepted
+10.8 % was accepted
+66.7 % was accepted
+93.2 % was accepted
+48.1 % was accepted
+accuracies [72.65] [95.41]
+NUMBER OF SWAPS = 7819
+SWAP ACCEPTANCE =  [2.164638788533145]  %
+Successfully Regressed
+71.49499999999999 % total accepted
+
+ld bank additional [90.07] [83.37]
+102.43916249275208 sec time taken
+0.715298125 0.04749472203818414 0.821048125 0.21428257088243174
+
+

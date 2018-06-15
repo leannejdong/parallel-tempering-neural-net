@@ -663,8 +663,9 @@ class ParallelTempering:
 		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		# for s in range(self.num_param):  
 		# 	self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
+		print("accuracies", max(acc_train), max(acc_test))
 		print("NUMBER OF SWAPS =", self.num_swap)
-		print("SWAP ACCEPTANCE = ", self.num_swap*100/self.total_swap_proposals," %")
+		print("SWAP ACCEPTANCE = ", [0 if self.total_swap_proposals is 0 else self.num_swap*100/self.total_swap_proposals]," %")
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
 def make_directory (directory): 
@@ -674,8 +675,8 @@ def make_directory (directory):
 def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,2):
-		problem = 6
+	for i in range(3,4):
+		problem = 7
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -685,22 +686,32 @@ def main():
 			features = data[:,0:11]
 			separate_flag = True
 			name = "winequality-red"
+			hidden = 50
+			ip = 11 #input
+			output = 10
 		if problem == 2: #IRIS
 			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
 			classes = data[:,4].reshape(data.shape[0],1)-1
 			features = data[:,0:4]
 			separate_flag = True
 			name = "iris"
+			hidden = 12
+			ip = 4 #input
+			output = 3
 		if problem == 3: #Ionosphere
 			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
 			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
 			name = "Ionosphere"
+			hidden = 50
+			ip = 34 #input
+			output = 2
 		if problem == 4: #Cancer
 			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
-			print(traindata.shape)
-			print(traindata[:,-1])
 			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
 			name = "Cancer"
+			hidden = 12
+			ip = 9 #input
+			output = 2
 		if problem == 5: #Wine Quality White
 			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
 			data = data[1:,:] #remove Labels
@@ -708,20 +719,35 @@ def main():
 			features = data[:,0:11]
 			separate_flag = True
 			name = "winequality-white"
+			hidden = 50
+			ip = 11 #input
+			output = 10
 		if problem == 6:
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
 			classes = data[:,20].reshape(data.shape[0],1)
 			features = data[:,0:20]
 			separate_flag = True
 			name = "bank-additional"
-
+			hidden = 50
+			ip = 20 #input
+			output = 2
+		if problem == 7:
+			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
+			testdata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
+			name = "PenDigit"
+			for k in range(16):
+				mean_train = np.mean(traindata[:,k])
+				dev_train = np.std(traindata[:,k]) 
+				traindata[:,k] = (traindata[:,k]-mean_train)/dev_train
+				mean_test = np.mean(testdata[:,k])
+				dev_test = np.std(testdata[:,k]) 
+				testdata[:,k] = (testdata[:,k]-mean_test)/dev_test
+			ip = 16
+			hidden = 30
+			output = 10
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
 		###############################
-
-		hidden = 50
-		ip = 20 #input
-		output = 2
 		topology = [ip, hidden, output]
 
 		NumSample = 8000
