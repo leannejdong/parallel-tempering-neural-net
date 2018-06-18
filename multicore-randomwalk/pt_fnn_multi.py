@@ -691,17 +691,17 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 200000
+		NumSample = 500000
 		maxtemp = 20  
 		swap_ratio = 0.125
-		num_chains = 20  
+		num_chains = 10  
 		burn_in = 0.2
 
 		###############################
 
 		swap_interval =  int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-		path = "RESULTS/NUM CHAIN (Linear increment)/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		path = "RESULTS/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
 		make_directory(path)
 		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)

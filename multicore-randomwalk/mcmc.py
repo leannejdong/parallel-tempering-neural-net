@@ -25,8 +25,9 @@
 
 
 
-
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+mpl.use('Agg')
 import numpy as np
 import random
 import time
@@ -288,7 +289,7 @@ class MCMC:
                 fxtest_samples[i + 1,] = pred_test
                 rmse_train[i + 1,] = rmsetrain
                 rmse_test[i + 1,] = rmsetest
-
+                print(naccept)
                 plt.plot(x_train, pred_train)
 
 
@@ -341,7 +342,7 @@ def main():
 
         timer = time.time()
 
-        numSamples = 80000# need to decide yourself
+        numSamples = 500000# need to decide yourself
 
         mcmc = MCMC(numSamples, traindata, testdata, topology)  # declare class
 

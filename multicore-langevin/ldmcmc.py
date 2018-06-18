@@ -395,7 +395,7 @@ class MCMC:
 
 
 def main():
-	for problem in range(1, 2):
+	for problem in range(2,3):
 
 		path = 'mcmcresults'
 		try:
@@ -448,7 +448,7 @@ def main():
 		topology = [input, hidden, output]
 		t = time.time()
 
-		numSamples = 40000   # need to decide yourself
+		numSamples = 500000   # need to decide yourself
 
 		mcmc = MCMC(numSamples, traindata, testdata, topology)  # declare class
 

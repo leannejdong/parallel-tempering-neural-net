@@ -24,11 +24,11 @@ from scipy.stats import norm
 #REGRESSION FNN Randomwalk (Taken from R. Chandra, L. Azizi, S. Cripps, 'Bayesian neural learning via Langevin dynamicsfor chaotic time series prediction', ICONIP 2017.)
 
 class Network:
-
 	def __init__(self, Topo, Train, Test, learn_rate):
 		self.Top = Topo  # NN topology [input, hidden, output]
 		self.TrainData = Train
 		self.TestData = Test
+		np.random.seed()
 		self.lrate = learn_rate
 
 		self.W1 = np.random.randn(self.Top[0], self.Top[1]) / np.sqrt(self.Top[0])
@@ -57,12 +57,24 @@ class Network:
 		out_delta = (desired - self.out) * (self.out * (1 - self.out))
 		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1 - self.hidout))
 
-		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
-		self.B2 += (-1 * self.lrate * out_delta)
-		Input = Input.reshape(1,self.Top[0])
-		self.W1 += np.dot(Input.T,(hid_delta * self.lrate))
-		self.B1 += (-1 * self.lrate * hid_delta)
+		#self.W2 += (self.hidout.T.dot(out_delta) * self.lrate)
+		#self.B2 += (-1 * self.lrate * out_delta)
+		#self.W1 += (Input.T.dot(hid_delta) * self.lrate)
+		#self.B1 += (-1 * self.lrate * hid_delta)
 
+		layer = 1  # hidden to output
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer + 1]):
+				self.W2[x, y] += self.lrate * out_delta[y] * self.hidout[x]
+		for y in range(0, self.Top[layer + 1]):
+			self.B2[y] += -1 * self.lrate * out_delta[y]
+
+		layer = 0  # Input to Hidden
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer + 1]):
+				self.W1[x, y] += self.lrate * hid_delta[y] * Input[x]
+		for y in range(0, self.Top[layer + 1]):
+			self.B1[y] += -1 * self.lrate * hid_delta[y]
 
 	def decode(self, w):
 		w_layer1size = self.Top[0] * self.Top[1]
@@ -79,11 +91,8 @@ class Network:
 
 	def encode(self):
 		w1 = self.W1.ravel()
-		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w2 = w2.reshape(1,w2.shape[0])
-		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
-		w = w.reshape(-1)
+		w = np.concatenate([w1, w2, self.B1, self.B2])
 		return w
 
 	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
@@ -96,8 +105,8 @@ class Network:
 		fx = np.zeros(size)
 
 		for i in range(0, depth):
-			for i in range(0, size):
-				pat = i
+			for j in range(0, size):
+				pat = j
 				Input = data[pat, 0:self.Top[0]]
 				Desired = data[pat, self.Top[0]:]
 				self.ForwardPass(Input)
