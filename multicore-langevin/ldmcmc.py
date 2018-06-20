@@ -354,7 +354,7 @@ class MCMC:
 				prior_current = prior_prop
 				w = w_proposal
 				eta = eta_pro
-
+				print(i)
 				#print  likelihood, prior_current, diff_prop, rmsetrain, rmsetest, w, 'accepted'
 				#print w_proposal, 'w_proposal'
 				#print w_gd, 'w_gd'
