@@ -679,7 +679,7 @@ def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(1):
-		problem = 6
+		problem = 7 
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -734,7 +734,7 @@ def main():
 			hidden = 50
 			ip = 20 #input
 			output = 2
-		if problem == 7:
+		if problem == 7: #PenDigit
 			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
 			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
 			name = "PenDigit"
@@ -756,7 +756,7 @@ def main():
 		NumSample = 20000
 		maxtemp = 20 
 		swap_ratio = 0.125
-		num_chains = 1
+		num_chains = 10
 		burn_in = 0.2
 
 		###############################

@@ -165,13 +165,12 @@ class ptReplica(multiprocessing.Process):
 		rmse = self.rmse(fx,y)
 		z = np.zeros((data.shape[0],self.topology[2]))
 		lhood = 0
-		timer = time.time()
 		for i in range(data.shape[0]):
 			for j in range(self.topology[2]):
 				if j == y[i]:
 					z[i,j] = 1
 				lhood += z[i,j]*np.log(prob[i,j])
-		print("likelihood_func time", time.time() - timer)
+
 		return [lhood/self.temperature, fx, rmse]
 
 	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
@@ -238,11 +237,9 @@ class ptReplica(multiprocessing.Process):
 
 		for i in range(samples-1):
 			#GENERATING SAMPLE
-			timerr = time.time()
 			w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
 			w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
 			w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth)
-			print("langevin time = ",time.time() - timerr)
 			diff_prop =  np.log(multivariate_normal.pdf(w, w_prop_gd, sigma_diagmat)  - np.log(multivariate_normal.pdf(w_proposal, w_gd, sigma_diagmat)))
 
 			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal)
@@ -673,7 +670,7 @@ def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
 	for i in range(3,4):
-		problem = 6
+		problem = 7
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -728,6 +725,20 @@ def main():
 			hidden = 50
 			ip = 20 #input
 			output = 2
+		if problem == 7: #PenDigit
+			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
+			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
+			name = "PenDigit"
+			for k in range(16):
+				mean_train = np.mean(traindata[:,k])
+				dev_train = np.std(traindata[:,k]) 
+				traindata[:,k] = (traindata[:,k]-mean_train)/dev_train
+				mean_test = np.mean(testdata[:,k])
+				dev_test = np.std(testdata[:,k]) 
+				testdata[:,k] = (testdata[:,k]-mean_test)/dev_test
+			ip = 16
+			hidden = 30
+			output = 10
 
 		###############################
 		#THESE ARE THE HYPERPARAMETERS#
