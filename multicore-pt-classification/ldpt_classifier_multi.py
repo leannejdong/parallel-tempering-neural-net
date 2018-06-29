@@ -11,6 +11,7 @@ import time
 import operator
 import math
 import matplotlib as mpl
+mpl.use('agg')
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
@@ -305,7 +306,7 @@ class ptReplica(multiprocessing.Process):
 		plt.plot(acc_train, label="Train")
 		plt.plot(acc_test, label="Test")
 		plt.legend()
-		plt.savefig(self.path+'/accuracy'+str(self.temperature)+'.pdf')
+		plt.savefig(self.path+'/accuracy'+str(self.temperature)+'.png')
 		plt.close()
 		#SAVING PARAMETERS
 		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
@@ -669,8 +670,8 @@ def make_directory (directory):
 def main():
 	make_directory('RESULTS')
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(3,4):
-		problem = 7
+	for i in range(3,5):
+		problem = 2
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -747,7 +748,7 @@ def main():
 		
 		topology = [ip, hidden, output]
 
-		NumSample = 20000
+		NumSample = 200
 		maxtemp = 20 
 		swap_ratio = 0.125
 		num_chains = 10

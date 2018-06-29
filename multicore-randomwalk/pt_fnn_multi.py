@@ -651,7 +651,7 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,2):
+	for i in range(1,3):
 		problem =	2
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
@@ -691,7 +691,7 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 500000
+		NumSample = 500
 		maxtemp = 20  
 		swap_ratio = 0.125
 		num_chains = 10  
