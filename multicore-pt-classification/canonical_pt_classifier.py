@@ -181,12 +181,7 @@ class ptReplica(multiprocessing.Process):
 		for i in range(pred.shape[0]):
 			if pred[i] == actual[i]:
 				count+=1 
-
-			#if(np.isclose(pred, actual, atol=er_tolerance).any()): 
-			#	count = count + 1
-
-		print(count, ' is count out of: ', pred.shape[0] )
-
+ 
 
 		return 100*(count/pred.shape[0])
 
@@ -364,7 +359,7 @@ class ptReplica(multiprocessing.Process):
 
 				acc_test[i+1,] = self.accuracy(pred_test, y_test )
 
-				print (i, self.temperature, likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted')
+				#print (i, self.temperature, likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted')
 				 
 
 				pos_w[i + 1,] = w_proposal
@@ -453,10 +448,10 @@ class ptReplica(multiprocessing.Process):
 
 		file_name = self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name,pos_w ) 
-		file_name = self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, fxtrain_samples, fmt='%1.2f')
-		file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
+		#file_name = self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperature)+ '.txt'
+		#np.savetxt(file_name, fxtrain_samples, fmt='%1.2f')
+		#file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
+		#np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
 		file_name = self.path+'/predictions/rmse_test_chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name, rmse_test, fmt='%1.2f')		
 		file_name = self.path+'/predictions/rmse_train_chain_'+ str(self.temperature)+ '.txt'
@@ -969,13 +964,13 @@ class ParallelTempering:
 			dat = np.loadtxt(file_name) 
 			accept_percent[i, :] = dat  
  
-			file_name = self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperatures[i])+ '.txt'
-			dat = np.loadtxt(file_name)
-			fx_train_all[i,:,:] = dat[burnin:,:]
+			#file_name = self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperatures[i])+ '.txt'
+			#dat = np.loadtxt(file_name)
+			#fx_train_all[i,:,:] = dat[burnin:,:]
 
-			file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperatures[i])+ '.txt'
-			dat = np.loadtxt(file_name)
-			fx_test_all[i,:,:] = dat[burnin:,:]	
+			#file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperatures[i])+ '.txt'
+			#dat = np.loadtxt(file_name)
+			#fx_test_all[i,:,:] = dat[burnin:,:]	
 
 			file_name = self.path+'/predictions/rmse_test_chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
@@ -1061,7 +1056,7 @@ class ParallelTempering:
 
 		accept = np.sum(accept_percent)/self.num_chains 
 
-		np.savetxt(self.path + '/pos_param.txt', posterior.T) 
+		#np.savetxt(self.path + '/pos_param.txt', posterior.T)  # tcoment to save space
 		
 		np.savetxt(self.path + '/likelihood.txt', likelihood_vec.T, fmt='%1.5f')
 
@@ -1078,7 +1073,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(7, 8):
+	for i in range(3, 9):
 		problem = i
 		separate_flag = False
 		print(problem, ' problem')
@@ -1094,7 +1089,8 @@ def main():
 			hidden = 50
 			ip = 11 #input
 			output = 10
-		if problem == 2: #IRIS
+			NumSample = 50000 
+		if problem == 3: #IRIS
 			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
 			classes = data[:,4].reshape(data.shape[0],1)-1
 			features = data[:,0:4]
@@ -1104,21 +1100,8 @@ def main():
 			hidden = 12
 			ip = 4 #input
 			output = 3
-		if problem == 3: #Ionosphere
-			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
-			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
-			name = "Ionosphere"
-			hidden = 50
-			ip = 34 #input
-			output = 2
-		if problem == 4: #Cancer
-			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
-			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
-			name = "Cancer"
-			hidden = 12
-			ip = 9 #input
-			output = 2
-		if problem == 5: #Wine Quality White
+			NumSample = 20000 
+		if problem == 2: #Wine Quality White
 			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
 			data = data[1:,:] #remove Labels
 			classes = data[:,11].reshape(data.shape[0],1)
@@ -1128,6 +1111,24 @@ def main():
 			hidden = 50
 			ip = 11 #input
 			output = 10
+			NumSample = 50000 
+		if problem == 4: #Ionosphere
+			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
+			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
+			name = "Ionosphere"
+			hidden = 50
+			ip = 34 #input
+			output = 2
+			NumSample = 50000 
+		if problem == 5: #Cancer
+			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
+			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
+			name = "Cancer"
+			hidden = 12
+			ip = 9 #input
+			output = 2
+			NumSample = 20000 
+	
 		if problem == 6: #Bank additional
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
 			classes = data[:,20].reshape(data.shape[0],1)
@@ -1137,6 +1138,7 @@ def main():
 			hidden = 50
 			ip = 20 #input
 			output = 2
+			NumSample = 100000 
 		if problem == 7: #PenDigit
 			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
 			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
@@ -1151,6 +1153,8 @@ def main():
 			ip = 16
 			hidden = 30
 			output = 10
+
+			NumSample = 100000 
 		if problem == 8: #Chess
 			data  = np.genfromtxt('DATA/chess.csv',delimiter=';')
 			classes = data[:,6].reshape(data.shape[0],1)
@@ -1160,6 +1164,8 @@ def main():
 			hidden = 25
 			ip = 6 #input
 			output = 18
+
+			NumSample = 100000 
 
 
 			# Rohits set of problems - processed data
@@ -1173,7 +1179,7 @@ def main():
 				mean = np.mean(features[:,k])
 				dev = np.std(features[:,k])
 				features[:,k] = (features[:,k]-mean)/dev
-			train_ratio = 0.6 #Choosable
+			train_ratio = 0.7 #Choosable
 			indices = np.random.permutation(features.shape[0])
 			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
 			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
@@ -1205,19 +1211,21 @@ def main():
 
 		#v = input('x',)
 
-		NumSample = 20000 
-		maxtemp = 20 
-		swap_ratio =  0.01
+		 
+		maxtemp = 5
+
 		num_chains = 10
-		swap_interval = 50 # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
-		burn_in = 0.2
-		surrogate_interval = 20  
+		swap_interval = 20   # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
+		burn_in = 0.5
+		surrogate_interval = 20  # ignore
 		surrogate_prob = 0.1
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/SurrogatePT/SydneyResults/'  # change this to your directory for results output
+		problemfolder = '/home/rohit/Desktop/SurrogatePT/SydneyResults/'  # change this to your directory for results output - produces large datasets
+
+		problemfolder_db = 'SydneyResults/'  # save main results
 
 	
 
@@ -1229,6 +1237,14 @@ def main():
 		if not os.path.exists( problemfolder+name+'_%s' % (run_nb)):
 			os.makedirs(  problemfolder+name+'_%s' % (run_nb))
 			path = (problemfolder+ name+'_%s' % (run_nb))
+
+		filename = ""
+		run_nb = 0
+		while os.path.exists( problemfolder_db+name+'_%s' % (run_nb)):
+			run_nb += 1
+		if not os.path.exists( problemfolder_db+name+'_%s' % (run_nb)):
+			os.makedirs(  problemfolder_db+name+'_%s' % (run_nb))
+			path_db = (problemfolder_db+ name+'_%s' % (run_nb))
 
 
 
@@ -1245,9 +1261,9 @@ def main():
 		print ('path           ---------', path)
 
 		#make_directory('SydneyResults')
-		resultingfile = open( path+'/master_result_file.txt','a+')
-		expfile = open( path+'/expdesign_file.txt','w')
+		resultingfile = open( path+'/master_result_file.txt','a+') 
 
+		resultingfile_db = open( path_db+'/master_result_file.txt','a+') 
 		use_surrogate = True # if you set this to false, you get canonical PT
 
 		save_surrogatedata = False # just to save surrogate data for analysis - set false since it will gen lots data
@@ -1257,6 +1273,7 @@ def main():
 		#path = "SydneyResults/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)+"_"+str(surrogate_interval)+"_"+str(surrogate_prob)
 		
 	
+
 		pt = ParallelTempering(use_surrogate,  save_surrogatedata, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, surrogate_interval, surrogate_prob, path)
 
 		directories = [  path+'/predictions/', path+'/posterior', path+'/results', path+'/surrogate', path+'/surrogate/learnsurrogate_data', path+'/posterior/pos_w',  path+'/posterior/pos_likelihood',path+'/posterior/surg_likelihood',path+'/posterior/accept_list'  ]
@@ -1274,7 +1291,9 @@ def main():
 	  
 
 		timer2 = time.time()
-		print ((timer2 - timer), 'sec time taken')
+
+		timetotal = (timer2 - timer) /60
+		print ((timetotal), 'min taken')
 
 		#PLOTS
 		'''fx_mu = fx_test.mean(axis=0)
@@ -1284,49 +1303,36 @@ def main():
 		fx_mu_tr = fx_train.mean(axis=0)
 		fx_high_tr = np.percentile(fx_train, 95, axis=0)
 		fx_low_tr = np.percentile(fx_train, 5, axis=0)'''
+		acc_tr = np.mean(acc_train [:])
+		acctr_std = np.std(acc_train[:]) 
+		acctr_max = np.amax(acc_train[:])
 
-		acc_tr = np.mean(acc_train[:])
-		acctr_std = np.std(acc_train[:])
 		acc_tes = np.mean(acc_test[:])
-		acctest_std = np.std(acc_test[:])
+		acctest_std = np.std(acc_test[:]) 
+		acctes_max = np.amax(acc_test[:])
+	
 
 
-		'''rmse_tr = np.mean(rmse_train[:])
+		rmse_tr = np.mean(rmse_train[:])
 		rmsetr_std = np.std(rmse_train[:])
+		rmsetr_max = np.amax(acc_train[:])
+
 		rmse_tes = np.mean(rmse_test[:])
-		rmsetest_std = np.std(rmse_test[:])'''
+		rmsetest_std = np.std(rmse_test[:])
+		rmsetes_max = np.amax(acc_train[:])
 
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, (rmse_surr, acc_tr, acctr_std, acc_tes, acctest_std, swap_perc), fmt='%1.5f')
-		print (rmse_surr, acc_tr, acctr_std, acc_tes, acctest_std)
+		np.savetxt(outres, (rmse_surr, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f')
+		print (rmse_surr, acc_tr, acctr_max, acc_tes, acctes_max)  
+		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ))
 
-		#np.savetxt(resultingfile,(NumSample, maxtemp, swap_ratio, num_chains, rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, swap_perc))
-		#ytestdata = testdata[:, ip]
-		#ytraindata = traindata[:, ip]
 
-		'''plt.plot(x_test, ytestdata,'.', label='actual')
-		plt.plot(x_test, fx_mu, '.', label='pred. (mean)')
-		plt.plot(x_test, fx_low, '.', label='pred.(5th percen.)')
-		plt.plot(x_test, fx_high, '.', label='pred.(95th percen.)')
-		plt.fill_between(x_test, fx_low, fx_high, facecolor='g', alpha=0.4)
-		plt.legend(loc='upper right')
+		outres_db = open(path_db+'/result.txt', "a+")
+		np.savetxt(outres_db, (rmse_surr, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f') 
+		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ))
 
-		plt.title("Plot of Test Data vs MCMC Uncertainty ")
-		plt.savefig(path+'/restest.png')
-		plt.savefig(path+'/restest.svg', format='svg', dpi=600)
-		plt.clf()
-		# -----------------------------------------
-		plt.plot(x_train, ytraindata, '.',label='actual')
-		plt.plot(x_train, fx_mu_tr, '.',label='pred. (mean)')
-		plt.plot(x_train, fx_low_tr, '.',label='pred.(5th percen.)')
-		plt.plot(x_train, fx_high_tr, '.',label='pred.(95th percen.)')
-		plt.fill_between(x_train, fx_low_tr, fx_high_tr, facecolor='g', alpha=0.4)
-		plt.legend(loc='upper right')
 
-		plt.title("Plot of Train Data vs MCMC Uncertainty ")
-		plt.savefig(path+'/restrain.png')
-		plt.savefig(path+'/restrain.svg', format='svg', dpi=600)
-		plt.clf()'''
+ 
 
 		x = np.linspace(0, acc_train.shape[0] , num=acc_train.shape[0])
 
@@ -1340,11 +1346,19 @@ def main():
 		plt.savefig(path+'/acc_samples.png') 
 		plt.clf()	
 
+		plt.plot(x, acc_train,'.', label='Test')
+		plt.plot(x, acc_test, '.', label='Train') 
+		plt.legend(loc='upper right')
+
+		plt.title("Plot of Classification Acc. over time")
+		plt.savefig(path_db+'/acc_samples.png') 
+		plt.clf()	
+
 		plt.plot(x, rmse_train,'.', label='Test')
 		plt.plot(x, rmse_test, '.', label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of Classification Acc. over time")
+		plt.title("Plot of EMSE over time")
 		plt.savefig(path+'/rmse_samples.png') 
 		plt.clf()
 
@@ -1357,6 +1371,10 @@ def main():
 	# Plots
 		plt.plot(likelihood.T)
 		plt.savefig(path+'/likelihood.png')
+		plt.clf()
+
+		plt.plot(likelihood.T)
+		plt.savefig(path_db+'/likelihood.png')
 		plt.clf()
 
 		#mpl_fig = plt.figure()
@@ -1376,8 +1394,10 @@ def main():
 		# plt.clf()
 		#dir()
 		gc.collect()
-		outres.close()
-		#os.remove(path+'/nn_params.pckl')
+		outres.close() 
 		resultingfile.close()
+		resultingfile_db.close()
+		outres_db.close()
 
 if __name__ == "__main__": main()
+
