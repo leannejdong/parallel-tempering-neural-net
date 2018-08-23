@@ -181,13 +181,24 @@ class ptReplica(multiprocessing.Process):
 				lhood += z[i,j]*np.log(prob[i,j])
 		return [lhood/self.temperature, fx, rmse]
 
-	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
+	'''def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
 		h = self.topology[1]  # number hidden neurons
 		d = self.topology[0]  # number input neurons
 		part1 = -1 * ((d * h + h + self.topology[2]+1) / 2) * np.log(sigma_squared)
 		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
 		log_loss = part1 - part2
-		return log_loss
+		return log_loss''' 
+
+
+	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
+		h = self.topology[1]  # number hidden neurons
+		d = self.topology[0]  # number input neurons
+		part1 = -1 * ((d * h + h + self.topology[2]+h*self.topology[2]) / 2) * np.log(sigma_squared)
+
+		#part1 = -1 * ((d * h + h + self.topology[2]+1) / 2) * np.log(sigma_squared)
+		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
+		log_loss = part1 - part2
+		return log_loss 
 
 	def run(self):
 		#INITIALISING FOR FNN
@@ -486,7 +497,8 @@ class ParallelTempering:
 			#print('yo')
 			#SWAPPING PROBABILITIES
 			try:
-				swap_proposal =  min(1,0.5*np.exp(lhood2 - lhood1))
+				#swap_proposal =  min(1,0.5*np.exp(lhood2 - lhood1))
+				swap_proposal =  min(1,0.5*np.exp(min(709, lhood2 - lhood1)))
 			except OverflowError:
 				swap_proposal = 1
 			u = np.random.uniform(0,1)
@@ -677,10 +689,13 @@ def make_directory (directory):
 		os.makedirs(directory)
 
 def main():
-	make_directory('RESULTS')
-	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1):
-		problem = 7 
+
+	problemfolder = '/home/rohit/Desktop/SurrogatePT/PTResults/'  # change this to your directory for results output
+
+	make_directory(problemfolder)
+	resultingfile = open(problemfolder+'/master_result_file.txt','a+')
+	for i in range(2, 5): 
+		problem = i
 		separate_flag = False
 		#DATA PREPROCESSING 
 		if problem == 1: #Wine Quality White
@@ -756,7 +771,7 @@ def main():
 
 		NumSample = 50000
 		maxtemp = 20 
-		swap_ratio = 0.125
+		swap_ratio = 0.005
 		num_chains = 10
 		burn_in = 0.2
 
@@ -774,9 +789,9 @@ def main():
 			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
 			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
 
-		swap_interval =  int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
+		swap_interval =  50 #int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		timer = time.time()
-		path = "RESULTS/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)
+		path = problemfolder+"/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_interval)
 		make_directory(path)
 		print(path)
 		pt = ParallelTempering(traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)
