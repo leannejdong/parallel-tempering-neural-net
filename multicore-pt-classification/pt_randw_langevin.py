@@ -217,19 +217,17 @@ class ptReplica(multiprocessing.Process):
 		y_test = self.testdata[:,netw[0]]
 		y_train = self.traindata[:,netw[0]]
 
-		batch_save = int(samples/20) # batch to append to file
-
-
-		
+		batch_save = int(samples/50) # batch to append to file	
 		w_size = (netw[0] * netw[1]) + (netw[1] * netw[2]) + netw[1] + netw[2]  # num of weights and bias
-		pos_w = np.ones((batch_save+1, w_size)) #Posterior for all weights 
+		pos_w = np.ones((batch_save, w_size)) #Posterior for all weights 
 		lhood_list = np.zeros((samples,1)) 
-		fxtrain_samples = np.ones((batch_save+1, trainsize)) #Output of regression FNN for training samples
-		fxtest_samples = np.ones((batch_save+1, testsize)) #Output of regression FNN for testing samples
-		rmse_train  = np.zeros(batch_save+1)
-		rmse_test = np.zeros(batch_save+1)
-		acc_train = np.zeros(batch_save+1)
-		acc_test = np.zeros(batch_save+1)
+		fxtrain_samples = np.ones((batch_save, trainsize)) #Output of regression FNN for training samples
+		fxtest_samples = np.ones((batch_save, testsize)) #Output of regression FNN for testing samples
+		rmse_train  = np.zeros(batch_save)
+		rmse_test = np.zeros(batch_save)
+		acc_train = np.zeros(batch_save)
+		acc_test = np.zeros(batch_save) 
+
 		learn_rate = 0.5
 
 		naccept = 0
@@ -259,8 +257,7 @@ class ptReplica(multiprocessing.Process):
 		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
 		#Beginning Sampling using MCMC RANDOMWALK
 		
-
-		#accept_list = open(self.path+'/acceptlist_'+str(int(self.temperature*10))+'.txt', "a+")
+ 
 
 
 
@@ -275,11 +272,6 @@ class ptReplica(multiprocessing.Process):
 
 		num_accepted = 0
 
- 
-
-
-
-
 		file_pos = open(self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperature)+ '.txt', 'w') 
 		file_fxtrain = open(self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperature)+ '.txt', 'w') 
 		file_fxtest = open(self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperature)+ '.txt', 'w') 
@@ -287,12 +279,18 @@ class ptReplica(multiprocessing.Process):
 		file_rmsetrain = open(self.path+'/predictions/rmse_train_chain_'+ str(self.temperature)+ '.txt', 'w')   
 		file_acctest = open(self.path+'/predictions/acc_test_chain_'+ str(self.temperature)+ '.txt' , 'w')  
 		file_acctrain = open(self.path+'/predictions/acc_train_chain_'+ str(self.temperature)+ '.txt', 'w')  
-		file_poslhood = open(self.path+'/posterior/pos_likelihood/chain_'+ str(self.temperature)+ '.txt' , 'w')  
- 
+		file_poslhood = open(self.path+'/posterior/pos_likelihood/chain_'+ str(self.temperature)+ '.txt' , 'w')
+
+		rmse_train_current = rmsetrain.copy()  
+		rmse_test_current = rmsetest.copy()
+		acc_train_current = self.accuracy(y_train, pred_train)  
+		acc_test_current = self.accuracy(y_test, pred_test)
+	
+
 
 		x = 0  # for batch to save posterior
  
-		for i in range(samples-1):
+		for i in range(samples):
 
 			timer1 = time.time() 
 
@@ -311,7 +309,10 @@ class ptReplica(multiprocessing.Process):
 			 
 			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal)
 
-			[likelihood_ignore, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal)
+			[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal)
+
+			#if self.temperature == 1.0:
+				#print(i, pred_train, rmsetrain, w_proposal[0], w[0])
  
 			prior_prop = self.prior_value(sigma_squared, nu_1, nu_2, w_proposal)  # takes care of the gradients
 			
@@ -324,49 +325,34 @@ class ptReplica(multiprocessing.Process):
 				mh_prob = 1
 
 
-
-			accept_list[i+1] = num_accepted
-
-			if (i % batch_save  ) == 0: # just for saving posterior to file
-				x = 0 
  
 
-			u = random.uniform(0, 1) 	
+			u = random.uniform(0, 1) 	 
 
-			likeh_list[i+1,0] = likelihood_proposal
+			likeh_list[i,0] = likelihood_proposal
+
 
 			if u < mh_prob:
 				naccept  =  naccept + 1
 				likelihood = likelihood_proposal
 				prior_current = prior_prop
 				w = w_proposal 
+				rmse_train_current = rmsetrain
+				rmse_test_current = rmsetest
+				acc_train_current = self.accuracy(pred_train, y_train)
+				acc_test_current = self.accuracy(pred_test, y_test)
 
-				#print(x, 'x    --------------------- -----------------------------------------------')
+				print(i,likelihood, acc_train_current, acc_test_current, '  * accepted')
+ 
 
-				acc_train[x+1,] = self.accuracy(pred_train, y_train )  
-				acc_test[x+1,] = self.accuracy(pred_test, y_test )
+			rmse_train[x,] = rmse_train_current
+			rmse_test[x,] = rmse_test_current
+			acc_train[x,] = acc_train_current
+			acc_test[x,] = acc_test_current
+			pos_w[x,] = w
+ 
 
-				print (i, self.temperature, likelihood, rmsetrain, rmsetest, acc_train[x+1,], acc_test[x+1,] , 'accepted') 
-
-				pos_w[x+ 1,] = w_proposal
-
-				fxtrain_samples[x + 1,] = pred_train
-				fxtest_samples[x + 1,] = pred_test
-				rmse_train[x + 1,] = rmsetrain
-				rmse_test[x + 1,] = rmsetest
-				#print(y_train, ' y_train')
-				x = x + 1
-
-			else:
-				pos_w[x+1,] = pos_w[x,] 
-				fxtrain_samples[x + 1,] = fxtrain_samples[x,]
-				fxtest_samples[x + 1,] = fxtest_samples[x,]
-				rmse_train[x + 1,] = rmse_train[x,]
-				rmse_test[x + 1,] = rmse_test[x,]
-				acc_train[x+1,] = acc_train[x,]
-				acc_test[x+1,] = acc_test[x,]
-
-				x = x + 1
+			x = x + 1
 			#SWAPPING PREP
 			if i%self.swap_interval == 0:
 				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature]),np.asarray([i])])
@@ -383,16 +369,18 @@ class ptReplica(multiprocessing.Process):
 					except:
 						print ('error') 
 
-			if (i % batch_save  ) == 0: #   saving posterior to file  
+			if x == batch_save: #   saving posterior to file  
+				x = 0
+				np.savetxt(file_pos,pos_w[ :, : ], fmt='%1.4f') 
+				np.savetxt(file_fxtrain, fxtrain_samples[ :, : ], fmt='%1.2f')  
+				np.savetxt(file_fxtest, fxtest_samples[ :, : ], fmt='%1.2f')		
+				np.savetxt(file_rmsetest, rmse_test[ :], fmt='%1.2f')		
+				np.savetxt(file_rmsetrain, rmse_train[ :], fmt='%1.2f')
+				np.savetxt(file_acctest, acc_test[:], fmt='%1.2f')		
+				np.savetxt(file_acctrain, acc_train[:], fmt='%1.2f') 
 
-				np.savetxt(file_pos,pos_w[ 1:, : ], fmt='%1.4f') 
-				np.savetxt(file_fxtrain, fxtrain_samples[ 1:, : ], fmt='%1.2f')  
-				np.savetxt(file_fxtest, fxtest_samples[ 1:, : ], fmt='%1.2f')		
-				np.savetxt(file_rmsetest, rmse_test[ 1:], fmt='%1.2f')		
-				np.savetxt(file_rmsetrain, rmse_train[ 1:], fmt='%1.2f') 
-				np.savetxt(file_acctest, acc_test[ 1:], fmt='%1.2f')		
-				np.savetxt(file_acctrain, acc_train[ 1:], fmt='%1.2f') 
-				
+		# np.savetxt(file_acctest, acc_test, fmt='%1.2f')		
+		# np.savetxt(file_acctrain, acc_train, fmt='%1.2f')  
 		np.savetxt(file_poslhood,likeh_list, fmt='%1.4f')  
  
 
@@ -788,7 +776,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(6, 8):
+	for i in range(3, 9):
 		problem = i
 		separate_flag = False
 		print(problem, ' problem')
@@ -869,7 +857,7 @@ def main():
 			hidden = 30
 			output = 10
 
-			NumSample = 100000 
+			NumSample = 100000
 		if problem == 8: #Chess
 			data  = np.genfromtxt('DATA/chess.csv',delimiter=';')
 			classes = data[:,6].reshape(data.shape[0],1)
@@ -921,7 +909,7 @@ def main():
  
 
 		 
-		maxtemp = 10
+		maxtemp = 20
 
 		num_chains = 10
 		swap_interval = 20   # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
@@ -932,7 +920,7 @@ def main():
 
 
 
-		problemfolder = '/home/rohit/Desktop/SurrogatePT/SydneyResults/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/SurrogatePT/SydneyResults_/'  # change this to your directory for results output - produces large datasets
 
 		problemfolder_db = 'SydneyResults/'  # save main results
 
@@ -1064,8 +1052,9 @@ def main():
 		plt.savefig(path_db+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot(x, rmse_train,'.', label='Test')
-		plt.plot(x, rmse_test, '.', label='Train') 
+		print(rmse_train.shape)
+		plt.plot(rmse_train[:, 0],'.', label='Train')
+		plt.plot(rmse_test[:, 0], '.', label='Test') 
 		plt.legend(loc='upper right')
 
 		plt.title("Plot of EMSE over time")
