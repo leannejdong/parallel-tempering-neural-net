@@ -153,6 +153,8 @@ class ptReplica(multiprocessing.Process):
 		self.testdata = testdata
 		self.w = w
 
+		self.use_langevin_gradients = False 
+
 	def rmse(self, pred, actual):
 		return np.sqrt(((pred-actual)**2).mean())
 
@@ -191,7 +193,7 @@ class ptReplica(multiprocessing.Process):
 		fxtest_samples = np.ones((samples, testsize)) #Output of regression FNN for testing samples
 		rmse_train  = np.zeros(samples)
 		rmse_test = np.zeros(samples)
-		learn_rate = 0.5
+		learn_rate = 0.1
 
 		naccept = 0
 		#Random Initialisation of weights
@@ -227,31 +229,39 @@ class ptReplica(multiprocessing.Process):
 		accept_list = open(self.path+'/acceptlist_'+str(self.temperature)+'.txt', "a+")
 
 		timer = time.time()
+
+		
 		for i in range(samples - 1):
 			#GENERATING SAMPLE
 			timer_0 = time.time()
-			w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
-			w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
-			w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth)
-
-			first = np.log(multivariate_normal.pdf(w , w_prop_gd , sigma_diagmat))
-
-			second = np.log(multivariate_normal.pdf(w_proposal , w_gd , sigma_diagmat))
-
-			print(w[0:4], '   w   ', self.temperature)
 
 
-			print(w_prop_gd[0:4], ' w_prop_gd   ', self.temperature)
+			if self.use_langevin_gradients is True:  
+				w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
+				w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
+				w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth)
 
-			
-			print(w_proposal[0:4], 'w_proposal ', self.temperature)
+				first = np.log(multivariate_normal.pdf(w , w_prop_gd , sigma_diagmat)) 
+				second = np.log(multivariate_normal.pdf(w_proposal , w_gd , sigma_diagmat))  
+				diff_prop =  first - second
 
-			print(w_gd[0:4], ' w_gd  ', self.temperature) 
+				'''print(w[0:4], '   w   ', self.temperature)
 
-			
-			diff_prop =  first - second
 
-			print(diff_prop, first, second, '     * diff_prop - first - second')
+				print(w_prop_gd[0:4], ' w_prop_gd   ', self.temperature)
+
+				
+				print(w_proposal[0:4], 'w_proposal ', self.temperature)
+
+				print(w_gd[0:4], ' w_gd  ', self.temperature) '''
+
+
+			else:
+				diff_prop = 0
+				w_proposal = np.random.normal(w, step_w, w_size)
+ 
+
+			#print(diff_prop, first, second, '     * diff_prop - first - second')
 
 			eta_pro = eta + np.random.normal(0, step_eta, 1)
 			tau_pro = math.exp(eta_pro)
@@ -278,7 +288,6 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal
 				eta = eta_pro
-				#print (i, mh_prob,'accepted')
 				accept_list.write('{} {} {} {} {} {} {}\n'.format(self.temperature,naccept, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
 				pos_w[i + 1,] = w_proposal
 				pos_tau[i + 1,] = tau_pro
@@ -286,6 +295,8 @@ class ptReplica(multiprocessing.Process):
 				fxtest_samples[i + 1,] = pred_test
 				rmse_train[i + 1,] = rmsetrain
 				rmse_test[i + 1,] = rmsetest
+
+				print (i, self.temperature, likelihood, rmsetrain, rmsetest, '                        accepted')
 			else:
 				#print (i, mh_prob,'not accepted')
 				accept_list.write('{} x {} {} {} {} {}\n'.format(self.temperature, i, rmsetrain, rmsetest, likelihood, diff_likelihood + diff_prior))
@@ -295,7 +306,7 @@ class ptReplica(multiprocessing.Process):
 				fxtest_samples[i + 1,] = fxtest_samples[i,]
 				rmse_train[i + 1,] = rmse_train[i,]
 				rmse_test[i + 1,] = rmse_test[i,]
-			print(self.temperature,i,"sampling took", (time.time()-timer_0))
+			#print(self.temperature,i,"sampling took", (time.time()-timer_0))
 			#print('INITIAL W(PROP) BEFORE SWAP',self.temperature,w_proposal,i,rmsetrain)
 			#print('INITIAL W BEFORE SWAP',self.temperature,i,w)
 			#SWAPPING PREP
@@ -316,7 +327,7 @@ class ptReplica(multiprocessing.Process):
 						likelihood = result[w.size+1]
 					except:
 						print ('error')
-				print(self.temperature,i,"swapping took",(time.time()-timer_1))
+				#print(self.temperature,i,"swapping took",(time.time()-timer_1))
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature])])
 		print(self.temperature,"Time Taken = ",time.time()-timer)
 		self.parameter_queue.put(param)
@@ -328,12 +339,12 @@ class ptReplica(multiprocessing.Process):
 		# plt.savefig(self.path+'/results/proposals.png')
 		# plt.clf()
 		#SAVING PARAMETERS
-		file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name,pos_w ) 
-		file_name = self.path+'/posterior/fxtrain_samples_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, fxtrain_samples, fmt='%1.2f')
-		file_name = self.path+'/posterior/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
+		#file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperature)+ '.txt'
+		#np.savetxt(file_name,pos_w ) 
+		#file_name = self.path+'/posterior/fxtrain_samples_chain_'+ str(self.temperature)+ '.txt'
+		#np.savetxt(file_name, fxtrain_samples, fmt='%1.2f')
+		#file_name = self.path+'/posterior/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
+		#np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
 		file_name = self.path+'/posterior/rmse_test_chain_'+ str(self.temperature)+ '.txt'
 		np.savetxt(file_name, rmse_test, fmt='%1.2f')		
 		file_name = self.path+'/posterior/rmse_train_chain_'+ str(self.temperature)+ '.txt'
@@ -630,15 +641,15 @@ class ParallelTempering:
 		accept_ratio = np.zeros((self.num_chains,1))
 
 		for i in range(self.num_chains):
-			file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperatures[i])+ '.txt'
-			dat = np.loadtxt(file_name)
-			pos_w[i,:,:] = dat[burnin:,:] 
-			file_name = self.path+'/posterior/fxtrain_samples_chain_'+ str(self.temperatures[i])+ '.txt'
+			#file_name = self.path+'/posterior/pos_w_chain_'+ str(self.temperatures[i])+ '.txt'
+			#dat = np.loadtxt(file_name)
+			#pos_w[i,:,:] = dat[burnin:,:] 
+			'''file_name = self.path+'/posterior/fxtrain_samples_chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
 			fxtrain_samples[i,:,:] = dat[burnin:,:]
 			file_name = self.path+'/posterior/fxtest_samples_chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
-			fxtest_samples[i,:,:] = dat[burnin:,:]	
+			fxtest_samples[i,:,:] = dat[burnin:,:]'''	
 			file_name = self.path+'/posterior/rmse_test_chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
 			rmse_test[i,:] = dat[burnin:]		
@@ -655,8 +666,8 @@ class ParallelTempering:
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		fx_test = fxtest_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.testdata.shape[0])
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		for s in range(self.num_param):  
-			self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
+		'''for s in range(self.num_param):  
+			self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) '''
 		print("NUMBER OF SWAPS =", self.num_swap)
 		return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_total)
 
@@ -666,8 +677,8 @@ def make_directory (directory):
 
 def main():
 	resultingfile = open('RESULTS/master_result_file.txt','a+')
-	for i in range(1,2):
-		problem =	2
+	for i in range(1,7):
+		problem =	i
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
 			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
@@ -706,11 +717,11 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 50000
-		maxtemp = 10  
-		swap_ratio = 0.125
-		num_chains = 2
-		burn_in = 0.2
+		NumSample = 100000
+		maxtemp = 4 
+		swap_ratio = 0 
+		num_chains = 10
+		burn_in = 0.5
 
 		###############################
 
@@ -744,13 +755,13 @@ def main():
 		rmse_tes = np.mean(rmse_test[:])
 		rmsetest_std = np.std(rmse_test[:])
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total), fmt='%1.5f')
+		np.savetxt(outres, (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total), fmt='%1.4f')
 		print (rmse_tr, rmsetr_std, rmse_tes, rmsetest_std)
-		np.savetxt(resultingfile,(NumSample, maxtemp, swap_ratio, num_chains, rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total))
+		np.savetxt(resultingfile,(NumSample, maxtemp, swap_ratio, num_chains, rmse_tr, rmsetr_std, rmse_tes, rmsetest_std, accept_total), fmt='%1.4f')
 		ytestdata = testdata[:, ip]
 		ytraindata = traindata[:, ip]
 
-		plt.plot(x_test, ytestdata, label='actual')
+		'''plt.plot(x_test, ytestdata, label='actual')
 		plt.plot(x_test, fx_mu, label='pred. (mean)')
 		plt.plot(x_test, fx_low, label='pred.(5th percen.)')
 		plt.plot(x_test, fx_high, label='pred.(95th percen.)')
@@ -772,7 +783,7 @@ def main():
 		plt.title("Plot of Train Data vs MCMC Uncertainty ")
 		plt.savefig(path+'/restrain.png')
 		plt.savefig(path+'/restrain.svg', format='svg', dpi=600)
-		plt.clf()
+		plt.clf()'''
 
 		mpl_fig = plt.figure()
 		ax = mpl_fig.add_subplot(111)

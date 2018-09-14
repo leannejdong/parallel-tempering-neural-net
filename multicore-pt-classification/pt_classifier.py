@@ -66,6 +66,22 @@ class Network:
 		self.W1 += (Input.T.reshape(self.Top[0],1).dot(hid_delta) * self.lrate)
 		self.B1 += (-1 * self.lrate * hid_delta)'''
 
+
+ 
+
+	def BackwardPass(self, Input, desired): # since data outputs and number of output neuons have different orgnisation
+		onehot = np.zeros((desired.size, self.Top[2]))
+		onehot[np.arange(desired.size),int(desired)] = 1
+		desired = onehot
+		out_delta = (desired - self.out)*(self.out*(1 - self.out))
+		hid_delta = np.dot(out_delta,self.W2.T) * (self.hidout * (1 - self.hidout))
+		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
+		self.B2 += (-1 * self.lrate * out_delta)
+		Input = Input.reshape(1,self.Top[0])
+		self.W1 += np.dot(Input.T,(hid_delta * self.lrate))
+		self.B1 += (-1 * self.lrate * hid_delta)
+
+
 	def decode(self, w):
 		w_layer1size = self.Top[0] * self.Top[1]
 		w_layer2size = self.Top[1] * self.Top[2]
@@ -78,18 +94,24 @@ class Network:
 		self.B1 = w[w_layer1size + w_layer2size:w_layer1size + w_layer2size + self.Top[1]].reshape(1,self.Top[1])
 		self.B2 = w[w_layer1size + w_layer2size + self.Top[1]:w_layer1size + w_layer2size + self.Top[1] + self.Top[2]].reshape(1,self.Top[2])
 
+ 
 
 	def encode(self):
 		w1 = self.W1.ravel()
+		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w = np.concatenate([w1, w2, self.B1, self.B2])
+		w2 = w2.reshape(1,w2.shape[0])
+		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
+		w = w.reshape(-1)
 		return w
 
 	def softmax(self):
 		prob = np.exp(self.out)/np.sum(np.exp(self.out))
 		return prob
+ 
 
-	'''def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
+
+	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
 
 		self.decode(w)  # method to decode w into W1, W2, B1, B2.
 		size = data.shape[0]
@@ -104,10 +126,10 @@ class Network:
 				Input = data[pat, 0:self.Top[0]]
 				Desired = data[pat, self.Top[0]:]
 				self.ForwardPass(Input)
-
+				self.BackwardPass(Input, Desired)
 		w_updated = self.encode()
 
-		return  w_updated'''
+		return  w_updated
 
 	def evaluate_proposal(self, data, w ):  # BP with SGD (Stocastic BP)
 
@@ -134,20 +156,14 @@ class Network:
 
 class ptReplica(multiprocessing.Process):
 
-	def __init__(self, use_surrogate,  save_surrogatedata,  w,  minlim_param, maxlim_param, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process,event,surrogate_parameterqueue,surrogate_interval,surrogate_prob,surrogate_start,surrogate_resume):
+	def __init__(self, use_langevin_gradients, learn_rate,  w,  minlim_param, maxlim_param, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process,event ):
 		#MULTIPROCESSING VARIABLES
 		multiprocessing.Process.__init__(self)
 		self.processID = temperature
 		self.parameter_queue = parameter_queue
 		self.signal_main = main_process
 		self.event =  event
-		#SURROGATE VARIABLES
-		self.surrogate_parameterqueue = surrogate_parameterqueue
-		self.surrogate_start = surrogate_start
-		self.surrogate_resume = surrogate_resume
-		self.surrogate_interval = surrogate_interval
-		self.surrogate_prob = surrogate_prob
-		#PARALLEL TEMPERING VARIABLES
+
 		self.temperature = temperature
 		self.swap_interval = swap_interval
 		self.path = path
@@ -164,11 +180,14 @@ class ptReplica(multiprocessing.Process):
 
 		self.minlim_param = minlim_param
 		self.maxlim_param = maxlim_param
+ 
 
-		self.use_surrogate =  use_surrogate
+		self.use_langevin_gradients = use_langevin_gradients
 
+		self.sgd_depth = 1
 
-		self.save_surrogatedata =  save_surrogatedata
+		self.learn_rate = learn_rate
+
  
 
 
@@ -224,8 +243,7 @@ class ptReplica(multiprocessing.Process):
 		w_size = (netw[0] * netw[1]) + (netw[1] * netw[2]) + netw[1] + netw[2]  # num of weights and bias
 		pos_w = np.ones((samples, w_size)) #Posterior for all weights
 		#pos_w = np.ones((samples, w_size)) #Posterior for all weights
-		s_pos_w = np.ones((samples, w_size)) #Surrogate Trainer
-		lhood_list = np.zeros((samples,1))
+	 	lhood_list = np.zeros((samples,1))
 		surrogate_list = np.zeros((samples,1))
 		#fxtrain_samples = np.ones((batch_save, trainsize)) #Output of regression FNN for training samples
 		#fxtest_samples = np.ones((batch_save, testsize)) #Output of regression FNN for testing samples
@@ -233,7 +251,7 @@ class ptReplica(multiprocessing.Process):
 		rmse_test = np.zeros(samples)
 		acc_train = np.zeros(samples)
 		acc_test = np.zeros(samples)
-		learn_rate = 0.5
+		learn_rate = self.learn_rate
 
 		naccept = 0
 		#Random Initialisation of weights
@@ -262,10 +280,7 @@ class ptReplica(multiprocessing.Process):
 		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
 		#Beginning Sampling using MCMC RANDOMWALK
 		
-
-		#accept_list = open(self.path+'/acceptlist_'+str(int(self.temperature*10))+'.txt', "a+")
-
-
+ 
 
 		trainacc = 0
 		testacc=0
@@ -279,34 +294,38 @@ class ptReplica(multiprocessing.Process):
 		num_accepted = 0
 
 
+ 
 
 
 
 
-
-		#Surrogate Init
-
-
-
-
-
-		#file_temp = open(self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperature)+ '.txt', 'w')
-
-
-
-		surrogate_counter = 0
 		
-		for i in range(samples-1):
+		for i in range(samples-1):  # Begin sampling --------------------------------------------------------------------------
 
 			timer1 = time.time()
-			is_true_lhood = True
+			#is_true_lhood = True
+
+			if self.use_langevin_gradients is True:  
+				w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
+				w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
+				w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth) 
+				first = np.log(multivariate_normal.pdf(w , w_prop_gd , sigma_diagmat)) 
+				second = np.log(multivariate_normal.pdf(w_proposal , w_gd , sigma_diagmat))  
+			
+				diff_prop =  first - second
+
+				
+
+			else:
+				diff_prop = 0
+				w_proposal = np.random.normal(w, step_w, w_size)
  
 			 
 			#is_surr_lhood = False 
 
 			# Update by perturbing all the  parameters via "random-walk" sampler 
 
-			w_proposal = np.random.normal(w, step_w, w_size)  
+			  
 
 
 			'''for j in range(w.size):
@@ -330,7 +349,8 @@ class ptReplica(multiprocessing.Process):
 
 			diff_prior = prior_prop - prior_current
 			try:
-				mh_prob = min(1, math.exp(diff_likelihood+diff_prior))
+				mh_prob = min(1, math.exp(diff_likelihood+diff_prior+ diff_prop))
+
 			except OverflowError as e:
 				mh_prob = 1
 
@@ -338,18 +358,18 @@ class ptReplica(multiprocessing.Process):
 
 			accept_list[i+1] = num_accepted
 
-			if (i % batch_save+1) == 0: # just for saving posterior to file
+			if (i % batch_save+1) == 0: # just for saving posterior to file - work on this later
 				x = 0
 
-
-			#likeh_list[i+1,0] = surrogate_var
-			#prop_list[i+1,] = v_proposal
-
+ 
 
 			u = random.uniform(0, 1)
 			
 			prop_list[i+1,] = w_proposal	
 			likeh_list[i+1,0] = likelihood_proposal
+
+
+			print( diff_prop, diff_likelihood, diff_prior, mh_prob,  ' first, second, diff_prop, diff_likelihood, diff_prior, mh_prob')
 
 			if u < mh_prob:
 				naccept  =  naccept + 1
@@ -360,7 +380,7 @@ class ptReplica(multiprocessing.Process):
 				acc_train[i+1,] = self.accuracy(pred_train, y_train )  
 				acc_test[i+1,] = self.accuracy(pred_test, y_test )
 
-				print (i, self.temperature, likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
+				print (i, self.temperature, diff_prop ,  likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
 
 				pos_w[i+ 1,] = w_proposal
 
@@ -406,8 +426,8 @@ class ptReplica(multiprocessing.Process):
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature]),np.asarray([i])])
 		#print('SWAPPED PARAM',self.temperature,param)
 		self.parameter_queue.put(param)
-		param = np.concatenate([s_pos_w[i-self.surrogate_interval:i,:],lhood_list[i-self.surrogate_interval:i,:]],axis=1)
-		self.surrogate_parameterqueue.put(param) 
+		#param = np.concatenate([s_pos_w[i-self.surrogate_interval:i,:],lhood_list[i-self.surrogate_interval:i,:]],axis=1)
+		#self.surrogate_parameterqueue.put(param) 
 
 		print ((naccept*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = naccept / (samples * 1.0) * 100 
@@ -448,12 +468,11 @@ class ptReplica(multiprocessing.Process):
 
 		#file_temp.close()
 
-		self.signal_main.set()
-		self.surrogate_start.set()
+		self.signal_main.set() 
 
 class ParallelTempering:
 
-	def __init__(self, use_surrogate,  save_surrogatedata, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, surrogate_interval, surrogate_prob, path):
+	def __init__(self,  use_langevin_gradients, learn_rate, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path):
 		#FNN Chain variables
 		self.traindata = traindata
 		self.testdata = testdata
@@ -475,13 +494,7 @@ class ParallelTempering:
 		self.chain_queue = multiprocessing.JoinableQueue()	
 		self.wait_chain = [multiprocessing.Event() for i in range (self.num_chains)]
 		self.event = [multiprocessing.Event() for i in range (self.num_chains)]
-		# create variables for surrogates
-		self.surrogate_interval = surrogate_interval
-		self.surrogate_prob = surrogate_prob
-		self.surrogate_resume_events = [multiprocessing.Event() for i in range(self.num_chains)]
-		self.surrogate_start_events = [multiprocessing.Event() for i in range(self.num_chains)]
-		self.surrogate_parameterqueues = [multiprocessing.Queue() for i in range(self.num_chains)]
-		self.surrchain_queue = multiprocessing.JoinableQueue()
+	 
 		self.all_param = None
 		self.geometric = True # True (geometric)  False (Linear)
 
@@ -491,11 +504,11 @@ class ParallelTempering:
 		self.maxY = np.ones((1,1))
 
 		self.model_signature = 0.0
+ 
 
-		self.use_surrogate = use_surrogate
+		self.learn_rate = learn_rate
 
-
-		self.save_surrogatedata =  save_surrogatedata
+		self.use_langevin_gradients = use_langevin_gradients
 
 	def default_beta_ladder(self, ndim, ntemps, Tmax): #https://github.com/konqr/ptemcee/blob/master/ptemcee/sampler.py
 		"""
@@ -505,23 +518,7 @@ class ParallelTempering:
 		this temperature.  If using adaptive parallel tempering, per `arXiv:1501.05823
 		<http://arxiv.org/abs/1501.05823>`_, choosing ``Tmax = inf`` is a safe bet, so long as
 		``ntemps`` is also specified.
-		:param ndim:
-			The number of dimensions in the parameter space.
-		:param ntemps: (optional)
-			If set, the number of temperatures to generate.
-		:param Tmax: (optional)
-			If set, the maximum temperature for the ladder.
-		Temperatures are chosen according to the following algorithm:
-		* If neither ``ntemps`` nor ``Tmax`` is specified, raise an exception (insufficient
-		  information).
-		* If ``ntemps`` is specified but not ``Tmax``, return a ladder spaced so that a Gaussian
-		  posterior would have a 25% temperature swap acceptance ratio.
-		* If ``Tmax`` is specified but not ``ntemps``:
-		  * If ``Tmax = inf``, raise an exception (insufficient information).
-		  * Else, space chains geometrically as above (for 25% acceptance) until ``Tmax`` is reached.
-		* If ``Tmax`` and ``ntemps`` are specified:
-		  * If ``Tmax = inf``, place one chain at ``inf`` and ``ntemps-1`` in a 25% geometric spacing.
-		  * Else, use the unique geometric spacing defined by ``ntemps`` and ``Tmax``.
+		 
 		"""
 
 		if type(ndim) != int or ndim < 1:
@@ -622,7 +619,7 @@ class ParallelTempering:
 		w = np.random.randn(self.num_param)
 		
 		for i in range(0, self.num_chains):
-			self.chains.append(ptReplica(self.use_surrogate, self.save_surrogatedata, w,  self.minlim_param, self.maxlim_param, self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i],self.surrogate_parameterqueues[i],self.surrogate_interval,self.surrogate_prob,self.surrogate_start_events[i],self.surrogate_resume_events[i]))
+			self.chains.append(ptReplica( self.use_langevin_gradients, self.learn_rate, w,  self.minlim_param, self.maxlim_param, self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i]))
 
 	def surr_procedure(self,queue):
 
@@ -707,38 +704,8 @@ class ParallelTempering:
 					#print(k)
 					self.event[k].set()
 			count = 0
-			# Surrogate's Events:
-
-
-			#print('surrogate')
-			
-			for k in range(0,self.num_chains):
-				self.surrogate_start_events[k].wait()
-			for k in range(0,self.num_chains):
-				self.surrchain_queue.put(self.surr_procedure(self.surrogate_parameterqueues[k]))
-				params = None
-				while True:
-					if self.surrchain_queue.empty():
-						self.surrchain_queue.task_done()
-						#print(k,'EMPTY QUEUE')
-						break
-					params = self.surrchain_queue.get()
-					if params is not None:
-						self.surrchain_queue.task_done()
-						#print(k,'No Process')
-						break
-				if params is not None:
-					all_param = np.asarray(params if not ('all_param' in locals()) else np.concatenate([all_param,params],axis=0))
-
-
-			if ('all_param' in locals()):
-				if all_param.shape == (self.num_chains*(self.surrogate_interval-1),self.num_param+1):
-					self.surrogate_trainer(all_param)
-					del all_param
-					for k in range(self.num_chains):
-						self.surrogate_resume_events[k].set()
-			
-			######################
+			# Surrogate's Events: 
+			 
 			for i in range(self.num_chains):
 				if self.chains[i].is_alive() is False:
 					count+=1
@@ -754,27 +721,18 @@ class ParallelTempering:
 		self.chain_queue.join()
 		for j in range(0,self.num_chains):
 			self.parameter_queue[i].close()
-			self.parameter_queue[i].join_thread()
-			self.surrogate_parameterqueues[i].close()
-			self.surrogate_parameterqueues[i].join_thread()
+			self.parameter_queue[i].join_thread() 
 		 
 
-		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec , accept_list,  rmse_surr    = self.show_results()
+		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec , accept_list   = self.show_results()
 
 
 
-
-
-
-
-		# for s in range(self.num_param):  
-		# 	self.plot_figure(pos_w[s,:], 'pos_distri_'+str(s)) 
-		#print("accuracies", max(acc_train), max(acc_test))
+ 
 		print("NUMBER OF SWAPS =", self.num_swap)
-		swap_perc = self.num_swap*100/self.total_swap_proposals 
-		#return (pos_w, fx_train, fx_test, x_train, x_test, rmse_train, rmse_test, accept_list)
+		swap_perc = self.num_swap*100/self.total_swap_proposals  
 
-		return pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,  accept_list, swap_perc,  likelihood_vec, rmse_surr
+		return pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,  accept_list, swap_perc,  likelihood_vec 
 
 
 
@@ -783,8 +741,7 @@ class ParallelTempering:
 		burnin = int(self.NumSamples*self.burn_in)
  
 		likelihood_rep = np.zeros((self.num_chains, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
-		surg_likelihood = np.zeros((self.num_chains, self.NumSamples - burnin, 2)) # index 1 for likelihood proposal and for gp_prediction
-		accept_percent = np.zeros((self.num_chains, 1))
+	 	accept_percent = np.zeros((self.num_chains, 1))
 		accept_list = np.zeros((self.num_chains, self.NumSamples )) 
  
 		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param)) 
@@ -811,10 +768,7 @@ class ParallelTempering:
 			file_name = self.path + '/posterior/accept_list/' + 'chain_'  + str(self.temperatures[i]) + '.txt'
 			dat = np.loadtxt(file_name) 
 			accept_list[i, :] = dat 
-
-			file_name = self.path + '/posterior/accept_list/' + 'chain_' + str(self.temperatures[i]) + '_accept.txt'
-			dat = np.loadtxt(file_name) 
-			accept_percent[i, :] = dat  
+ 
  
 			#file_name = self.path+'/predictions/fxtrain_samples_chain_'+ str(self.temperatures[i])+ '.txt'
 			#dat = np.loadtxt(file_name)
@@ -850,7 +804,6 @@ class ParallelTempering:
  
 
 		likelihood_vec = likelihood_rep.transpose(2,0,1).reshape(2,-1) 
-		surg_likelihood_vec = surg_likelihood.transpose(2,0,1).reshape(2,-1)
 
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		acc_train = acc_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
@@ -858,51 +811,8 @@ class ParallelTempering:
 		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 
  
-
-		'''if self.use_surrogate is True: 
-
-			surrogate_likl = surg_likelihood_vec.T
-			surrogate_likl = surrogate_likl[~np.isnan(surrogate_likl).any(axis=1)]
-
-
-			rmse_surr =  np.sqrt(((surrogate_likl[:,1]-surrogate_likl[:,0])**2).mean())
-
-
-			print(rmse_surr, ' rmse_surr')
-
-			print(surrogate_likl[:,0], 'Model Likelihood')
-
-			print(surrogate_likl[:,1], 'Surrogate Likelihood')
-
-
-			slen = np.arange(0,surrogate_likl.shape[0],1)
-			fig = plt.figure(figsize = (12,12))
-			ax = fig.add_subplot(111)
-			ax.set_facecolor('#f2f2f3')
-			surrogate_plot = ax.plot(slen,surrogate_likl[:,1],linestyle='-', linewidth= 1, color= 'b', label= 'Surrogate Likelihood')
-			model_plot = ax.plot(slen,surrogate_likl[:,0],linestyle= '--', linewidth = 1, color = 'k', label = 'Model Likelihood')
-			ax.set_title('Surrogate predicted likelihood',size= 9+2)
-			ax.set_xlabel('Samples',size= 9+1)
-			ax.set_ylabel('Tau/Likelihood', size= 9+1)
-			ax.set_xlim([0,np.amax(slen)])
-			ax.legend((surrogate_plot, model_plot),('Surrogate Likelihood', 'Model Likelihood'))
-			fig.tight_layout()
-			fig.subplots_adjust(top=0.88)
-			plt.savefig('%s/surrogate_likl.png'% (self.path), dpi=300, transparent=False)
-			plt.clf() 
-
-
-			# creating test data set for testing with SGD-FNN verification
-			y_norm = likelihood_vec.T[:,0]
-			y_norm = y_norm.reshape(y_norm.shape[0],1)
-			Y_norm = self.normalize_likelihood(y_norm)
-
-		
-
-
-			np.savetxt(self.path + '/surrogate/surg_likelihood.txt', surrogate_likl, fmt='%1.5f')'''
-
-		rmse_surr =0
+ 
+ 
 
 
 
@@ -917,7 +827,7 @@ class ParallelTempering:
 		np.savetxt(self.path + '/acceptpercent.txt', [accept], fmt='%1.2f')
  
 
-		return posterior, fx_train_all, fx_test_all,   rmse_train, rmse_test,  acc_train, acc_test,  likelihood_vec.T, accept_list,  rmse_surr
+		return posterior, fx_train_all, fx_test_all,   rmse_train, rmse_test,  acc_train, acc_test,  likelihood_vec.T, accept_list 
 
 	def make_directory (self, directory): 
 		if not os.path.exists(directory):
@@ -925,7 +835,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(3, 9) :
+	for i in range(5, 9) :
 
 
 		problem = i
@@ -981,7 +891,7 @@ def main():
 			hidden = 12
 			ip = 9 #input
 			output = 2
-			NumSample = 50000 
+			NumSample = 50000
 	
 		if problem == 6: #Bank additional
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
@@ -1037,10 +947,7 @@ def main():
 			indices = np.random.permutation(features.shape[0])
 			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
 			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
-
-		print(traindata, 'TrainData')
-
-		print(testdata)
+ 
 
 
 
@@ -1057,16 +964,9 @@ def main():
 		y_test =  testdata[:,netw[0]]
 		y_train =  traindata[:,netw[0]]
 
+		#NumSample = NumSample * 0.1
 
-
-
-		print(y_train, ' y_train')
-
-
-		#v = input('x',)
-
-		NumSample = NumSample * 2
-
+ 
 
 
 		 
@@ -1075,15 +975,17 @@ def main():
 		num_chains = 10
 		swap_interval = 20   # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		burn_in = 0.6
-		surrogate_interval = 20  # ignore
-		surrogate_prob = 0.1
+	 
+		learn_rate = 0.01  # in case langevin gradients are used. 
+
+		use_langevin_gradients = False  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/SurrogatePT/PTFinalResults/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_LangevinResults/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PTFinalResults/'  # save main results
+		problemfolder_db = 'PT_LangevinResults/'  # save main results
 
 	
 
@@ -1105,34 +1007,16 @@ def main():
 			path_db = (problemfolder_db+ name+'_%s' % (run_nb))
 
 
-
-
-		'''while os.path.exists(problemfolder +'results_%s' % (run_nb)):
-		run_nb += 1
-	if not os.path.exists(problemfolder +'results_%s' % (run_nb)):
-		os.makedirs(problemfolder +'results_%s' % (run_nb))
-		filename = (problemfolder +'results_%s' % (run_nb))
-	run_nb_str = 'results_' + str(run_nb)'''
-
-		
  
-		print ('path           ---------', path)
-
-		#make_directory('SydneyResults')
 		resultingfile = open( path+'/master_result_file.txt','a+') 
 
-		resultingfile_db = open( path_db+'/master_result_file.txt','a+') 
-		use_surrogate = True # if you set this to false, you get canonical PT
-
-		save_surrogatedata = False # just to save surrogate data for analysis - set false since it will gen lots data
+		resultingfile_db = open( path_db+'/master_result_file.txt','a+')  
   
-  
-		timer = time.time()
-		#path = "SydneyResults/"+name+"_results_"+str(NumSample)+"_"+str(maxtemp)+"_"+str(num_chains)+"_"+str(swap_ratio)+"_"+str(surrogate_interval)+"_"+str(surrogate_prob)
+		timer = time.time() 
 		
 	
 
-		pt = ParallelTempering(use_surrogate,  save_surrogatedata, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, surrogate_interval, surrogate_prob, path)
+		pt = ParallelTempering( use_langevin_gradients,  learn_rate,  traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)
 
 		directories = [  path+'/predictions/', path+'/posterior', path+'/results', path+'/surrogate', path+'/surrogate/learnsurrogate_data', path+'/posterior/pos_w',  path+'/posterior/pos_likelihood',path+'/posterior/surg_likelihood',path+'/posterior/accept_list'  ]
 	
@@ -1142,9 +1026,8 @@ def main():
 
 
 		pt.initialize_chains(  burn_in)
-
-		#pos_w, fx_train, fx_test,   rmse_train, rmse_test, accept_total,  likelihood_rep   
-		(pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test, accept_list, swap_perc,  likelihood_rep, rmse_surr ) = pt.run_chains()
+  
+		(pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test, accept_list, swap_perc,  likelihood_rep  ) = pt.run_chains()
 
 	  
 
@@ -1153,14 +1036,8 @@ def main():
 		timetotal = (timer2 - timer) /60
 		print ((timetotal), 'min taken')
 
-		#PLOTS
-		'''fx_mu = fx_test.mean(axis=0)
-		fx_high = np.percentile(fx_test, 95, axis=0)
-		fx_low = np.percentile(fx_test, 5, axis=0)
+		#PLOTS 
 
-		fx_mu_tr = fx_train.mean(axis=0)
-		fx_high_tr = np.percentile(fx_train, 95, axis=0)
-		fx_low_tr = np.percentile(fx_train, 5, axis=0)'''
 		acc_tr = np.mean(acc_train [:])
 		acctr_std = np.std(acc_train[:]) 
 		acctr_max = np.amax(acc_train[:])
@@ -1180,13 +1057,13 @@ def main():
 		rmsetes_max = np.amax(acc_train[:])
 
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, (rmse_surr, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f')
-		print (rmse_surr, acc_tr, acctr_max, acc_tes, acctes_max)  
+		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f')
+		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
 		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
 		outres_db = open(path_db+'/result.txt', "a+")
-		np.savetxt(outres_db, (rmse_surr, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f') 
+		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f') 
 		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
