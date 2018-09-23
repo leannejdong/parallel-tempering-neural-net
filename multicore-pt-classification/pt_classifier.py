@@ -188,6 +188,8 @@ class ptReplica(multiprocessing.Process):
 
 		self.learn_rate = learn_rate
 
+		self.l_prob = 0.5
+
  
 
 
@@ -252,8 +254,7 @@ class ptReplica(multiprocessing.Process):
 		acc_train = np.zeros(samples)
 		acc_test = np.zeros(samples)
 		learn_rate = self.learn_rate
-
-		naccept = 0
+ 
 		#Random Initialisation of weights
 		w = self.w
 		eta = 0 #Junk variable 
@@ -293,6 +294,8 @@ class ptReplica(multiprocessing.Process):
 
 		num_accepted = 0
 
+		langevin_count = 0
+
 
  
 
@@ -305,14 +308,32 @@ class ptReplica(multiprocessing.Process):
 			timer1 = time.time()
 			#is_true_lhood = True
 
-			if self.use_langevin_gradients is True:  
+
+			lx = np.random.uniform(0,1,1)
+
+			if (self.use_langevin_gradients is True) and (lx< self.l_prob):  
 				w_gd = fnn.langevin_gradient(self.traindata, w.copy(), self.sgd_depth) # Eq 8
 				w_proposal = np.random.normal(w_gd, step_w, w_size) # Eq 7
 				w_prop_gd = fnn.langevin_gradient(self.traindata, w_proposal.copy(), self.sgd_depth) 
-				first = np.log(multivariate_normal.pdf(w , w_prop_gd , sigma_diagmat)) 
-				second = np.log(multivariate_normal.pdf(w_proposal , w_gd , sigma_diagmat))  
+				#first = np.log(multivariate_normal.pdf(w , w_prop_gd , sigma_diagmat)) 
+				#second = np.log(multivariate_normal.pdf(w_proposal , w_gd , sigma_diagmat)) 
+
+				wc_delta = (w- w_prop_gd) 
+				wp_delta = (w_proposal - w_gd )
+
+				sigma_sq = step_w
+
+				first = -0.5 * np.sum(wc_delta  *  wc_delta  ) / sigma_sq  # this is wc_delta.T  *  wc_delta /sigma_sq
+				second = -0.5 * np.sum(wp_delta * wp_delta ) / sigma_sq
+
 			
 				diff_prop =  first - second
+
+				diff_prop =  diff_prop/self.temperature
+
+				#print(first, second, diff_prop, self.l_prob, lx, ' *****')
+
+				langevin_count = langevin_count + 1
 
 				
 
@@ -364,15 +385,16 @@ class ptReplica(multiprocessing.Process):
  
 
 			u = random.uniform(0, 1)
+ 
 			
 			prop_list[i+1,] = w_proposal	
 			likeh_list[i+1,0] = likelihood_proposal
 
 
-			print( diff_prop, diff_likelihood, diff_prior, mh_prob,  ' first, second, diff_prop, diff_likelihood, diff_prior, mh_prob')
+			#print( diff_prop, diff_likelihood, diff_prior, mh_prob,  '  diff_prop, diff_likelihood, diff_prior, mh_prob')
 
 			if u < mh_prob:
-				naccept  =  naccept + 1
+				num_accepted  =  num_accepted + 1
 				likelihood = likelihood_proposal
 				prior_current = prior_prop
 				w = w_proposal 
@@ -380,7 +402,7 @@ class ptReplica(multiprocessing.Process):
 				acc_train[i+1,] = self.accuracy(pred_train, y_train )  
 				acc_test[i+1,] = self.accuracy(pred_test, y_test )
 
-				print (i, self.temperature, diff_prop ,  likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
+				print (i, langevin_count, self.temperature, diff_prop ,  likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
 
 				pos_w[i+ 1,] = w_proposal
 
@@ -429,8 +451,12 @@ class ptReplica(multiprocessing.Process):
 		#param = np.concatenate([s_pos_w[i-self.surrogate_interval:i,:],lhood_list[i-self.surrogate_interval:i,:]],axis=1)
 		#self.surrogate_parameterqueue.put(param) 
 
-		print ((naccept*100 / (samples * 1.0)), '% was accepted')
-		accept_ratio = naccept / (samples * 1.0) * 100 
+		print ((num_accepted*100 / (samples * 1.0)), '% was accepted')
+		accept_ratio = num_accepted / (samples * 1.0) * 100 
+
+
+		print ((langevin_count*100 / (samples * 1.0)), '% was Lsnngrevin ')
+		langevin_ratio = langevin_count / (samples * 1.0) * 100 
 
 		
 		file_name = self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperature)+ '.txt'
@@ -724,15 +750,15 @@ class ParallelTempering:
 			self.parameter_queue[i].join_thread() 
 		 
 
-		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec , accept_list   = self.show_results()
+		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec ,   accept_vec, accept  = self.show_results()
 
-
+ 
 
  
 		print("NUMBER OF SWAPS =", self.num_swap)
 		swap_perc = self.num_swap*100/self.total_swap_proposals  
 
-		return pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,  accept_list, swap_perc,  likelihood_vec 
+		return pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,   likelihood_vec , swap_perc,    accept_vec, accept
 
 
 
@@ -810,6 +836,11 @@ class ParallelTempering:
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 
+
+		accept_vec  = accept_list 
+
+		print(accept_vec)
+
  
  
  
@@ -827,7 +858,7 @@ class ParallelTempering:
 		np.savetxt(self.path + '/acceptpercent.txt', [accept], fmt='%1.2f')
  
 
-		return posterior, fx_train_all, fx_test_all,   rmse_train, rmse_test,  acc_train, acc_test,  likelihood_vec.T, accept_list 
+		return posterior, fx_train_all, fx_test_all,   rmse_train, rmse_test,  acc_train, acc_test,  likelihood_vec.T, accept_vec , accept
 
 	def make_directory (self, directory): 
 		if not os.path.exists(directory):
@@ -835,7 +866,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(5, 9) :
+	for i in range(3, 9) :
 
 
 		problem = i
@@ -864,7 +895,7 @@ def main():
 			hidden = 12
 			ip = 4 #input
 			output = 3
-			NumSample = 50000 
+			NumSample = 10000 
 		if problem == 2: #Wine Quality White
 			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
 			data = data[1:,:] #remove Labels
@@ -883,7 +914,7 @@ def main():
 			hidden = 50
 			ip = 34 #input
 			output = 2
-			NumSample = 50000
+			NumSample = 10000 
 		if problem == 5: #Cancer
 			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
 			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
@@ -891,7 +922,7 @@ def main():
 			hidden = 12
 			ip = 9 #input
 			output = 2
-			NumSample = 50000
+			NumSample = 10000 
 	
 		if problem == 6: #Bank additional
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
@@ -902,7 +933,7 @@ def main():
 			hidden = 50
 			ip = 20 #input
 			output = 2
-			NumSample = 50000
+			NumSample = 20000
 		if problem == 7: #PenDigit
 			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
 			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
@@ -918,7 +949,7 @@ def main():
 			hidden = 30
 			output = 10
 
-			NumSample = 50000 
+			NumSample = 20000 
 		if problem == 8: #Chess
 			data  = np.genfromtxt('DATA/chess.csv',delimiter=';')
 			classes = data[:,6].reshape(data.shape[0],1)
@@ -929,7 +960,7 @@ def main():
 			ip = 6 #input
 			output = 18
 
-			NumSample = 50000
+			NumSample = 20000
 
 
 			# Rohits set of problems - processed data
@@ -973,19 +1004,19 @@ def main():
 		maxtemp = 4
  
 		num_chains = 10
-		swap_interval = 20   # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
+		swap_interval = 200000   # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours
 		burn_in = 0.6
 	 
-		learn_rate = 0.01  # in case langevin gradients are used. 
+		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
-
-
+		use_langevin_gradients = True # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_LangevinResults/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_LangevinResults/'  # save main results
+
+		problemfolder = '/home/rohit/Desktop/PT/PT_LangevinResults_learnrate/'  # change this to your directory for results output - produces large datasets
+
+		problemfolder_db = 'PT_LangevinResults_learnrate/'  # save main results
 
 	
 
@@ -1027,9 +1058,10 @@ def main():
 
 		pt.initialize_chains(  burn_in)
   
-		(pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test, accept_list, swap_perc,  likelihood_rep  ) = pt.run_chains()
+		
+		pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,   likelihood_rep , swap_perc,    accept_vec, accept = pt.run_chains()
 
-	  
+ 
 
 		timer2 = time.time()
 
@@ -1057,13 +1089,13 @@ def main():
 		rmsetes_max = np.amax(acc_train[:])
 
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f')
+		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f')
 		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
 		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
 		outres_db = open(path_db+'/result.txt', "a+")
-		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, timetotal), fmt='%1.2f') 
+		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f') 
 		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
@@ -1103,6 +1135,10 @@ def main():
 		likelihood = likelihood_rep[:,0] # just plot proposed likelihood
 		likelihood = np.asarray(np.split(likelihood, num_chains))
 
+		print(accept_vec)
+
+
+	 
 	# Plots
 		plt.plot(likelihood.T)
 		plt.savefig(path+'/likelihood.png')
@@ -1111,6 +1147,12 @@ def main():
 		plt.plot(likelihood.T)
 		plt.savefig(path_db+'/likelihood.png')
 		plt.clf()
+
+
+		plt.plot(accept_vec.T )
+		plt.savefig(path_db+'/accept.png')
+		plt.clf()
+
 
 		#mpl_fig = plt.figure()
 		#ax = mpl_fig.add_subplot(111)
