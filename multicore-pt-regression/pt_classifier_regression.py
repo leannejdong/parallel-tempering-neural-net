@@ -23,6 +23,7 @@ from scipy.stats import norm
 
 import io  
 
+
 class Network:
 
 	def __init__(self, Topo, Train, Test, learn_rate):
@@ -30,13 +31,14 @@ class Network:
 		self.TrainData = Train
 		self.TestData = Test
 		self.lrate = learn_rate
+
 		self.W1 = np.random.randn(self.Top[0], self.Top[1]) / np.sqrt(self.Top[0])
 		self.B1 = np.random.randn(1, self.Top[1]) / np.sqrt(self.Top[1])  # bias first layer
 		self.W2 = np.random.randn(self.Top[1], self.Top[2]) / np.sqrt(self.Top[1])
 		self.B2 = np.random.randn(1, self.Top[2]) / np.sqrt(self.Top[1])  # bias second layer
+
 		self.hidout = np.zeros((1, self.Top[1]))  # output of first hidden layer
 		self.out = np.zeros((1, self.Top[2]))  # output last layer
-		self.pred_class = 0
 
 	def sigmoid(self, x):
 		return 1 / (1 + np.exp(-x))
@@ -52,35 +54,28 @@ class Network:
 		z2 = self.hidout.dot(self.W2) - self.B2
 		self.out = self.sigmoid(z2)  # output second hidden layer
 
-		self.pred_class = np.argmax(self.out)
-
-
-		#print(self.pred_class, self.out, '  ---------------- out ')
-
-	'''def BackwardPass(self, Input, desired):
-		out_delta = (desired - self.out).dot(self.out.dot(1 - self.out))
+	def BackwardPass(self, Input, desired):
+		out_delta = (desired - self.out) * (self.out * (1 - self.out))
 		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1 - self.hidout))
-		print(self.B2.shape)
-		self.W2 += (self.hidout.T.reshape(self.Top[1],1).dot(out_delta) * self.lrate)
-		self.B2 += (-1 * self.lrate * out_delta)
-		self.W1 += (Input.T.reshape(self.Top[0],1).dot(hid_delta) * self.lrate)
-		self.B1 += (-1 * self.lrate * hid_delta)'''
 
+		#self.W2 += (self.hidout.T.dot(out_delta) * self.lrate)
+		#self.B2 += (-1 * self.lrate * out_delta)
+		#self.W1 += (Input.T.dot(hid_delta) * self.lrate)
+		#self.B1 += (-1 * self.lrate * hid_delta)
 
- 
+		layer = 1  # hidden to output
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer + 1]):
+				self.W2[x, y] += self.lrate * out_delta[y] * self.hidout[x]
+		for y in range(0, self.Top[layer + 1]):
+			self.B2[y] += -1 * self.lrate * out_delta[y]
 
-	def BackwardPass(self, Input, desired): # since data outputs and number of output neuons have different orgnisation
-		onehot = np.zeros((desired.size, self.Top[2]))
-		onehot[np.arange(desired.size),int(desired)] = 1
-		desired = onehot
-		out_delta = (desired - self.out)*(self.out*(1 - self.out))
-		hid_delta = np.dot(out_delta,self.W2.T) * (self.hidout * (1 - self.hidout))
-		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
-		self.B2 += (-1 * self.lrate * out_delta)
-		Input = Input.reshape(1,self.Top[0])
-		self.W1 += np.dot(Input.T,(hid_delta * self.lrate))
-		self.B1 += (-1 * self.lrate * hid_delta)
-
+		layer = 0  # Input to Hidden
+		for x in range(0, self.Top[layer]):
+			for y in range(0, self.Top[layer + 1]):
+				self.W1[x, y] += self.lrate * hid_delta[y] * Input[x]
+		for y in range(0, self.Top[layer + 1]):
+			self.B1[y] += -1 * self.lrate * hid_delta[y]
 
 	def decode(self, w):
 		w_layer1size = self.Top[0] * self.Top[1]
@@ -91,25 +86,15 @@ class Network:
 
 		w_layer2 = w[w_layer1size:w_layer1size + w_layer2size]
 		self.W2 = np.reshape(w_layer2, (self.Top[1], self.Top[2]))
-		self.B1 = w[w_layer1size + w_layer2size:w_layer1size + w_layer2size + self.Top[1]].reshape(1,self.Top[1])
-		self.B2 = w[w_layer1size + w_layer2size + self.Top[1]:w_layer1size + w_layer2size + self.Top[1] + self.Top[2]].reshape(1,self.Top[2])
+		self.B1 = w[w_layer1size + w_layer2size:w_layer1size + w_layer2size + self.Top[1]]
+		self.B2 = w[w_layer1size + w_layer2size + self.Top[1]:w_layer1size + w_layer2size + self.Top[1] + self.Top[2]]
 
- 
 
 	def encode(self):
 		w1 = self.W1.ravel()
-		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w2 = w2.reshape(1,w2.shape[0])
-		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
-		w = w.reshape(-1)
+		w = np.concatenate([w1, w2, self.B1, self.B2])
 		return w
-
-	def softmax(self):
-		prob = np.exp(self.out)/np.sum(np.exp(self.out))
-		return prob
- 
-
 
 	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
 
@@ -127,6 +112,7 @@ class Network:
 				Desired = data[pat, self.Top[0]:]
 				self.ForwardPass(Input)
 				self.BackwardPass(Input, Desired)
+
 		w_updated = self.encode()
 
 		return  w_updated
@@ -139,18 +125,13 @@ class Network:
 		Input = np.zeros((1, self.Top[0]))  # temp hold input
 		Desired = np.zeros((1, self.Top[2]))
 		fx = np.zeros(size)
-		prob = np.zeros((size,self.Top[2]))
 
 		for i in range(0, size):  # to see what fx is produced by your current weight update
 			Input = data[i, 0:self.Top[0]]
 			self.ForwardPass(Input)
-			fx[i] = self.pred_class
-			prob[i] = self.softmax()
+			fx[i] = self.out
 
-		#print(fx, 'fx')
-		#print(prob, 'prob' )
-
-		return fx, prob
+		return fx
  
 
 
@@ -849,120 +830,48 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(5, 9) :
+	for i in range(1, 2) : 
 
+		problem =	i
+		if problem ==	1:
+			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
+			name	= "Lazer"
+		if problem ==	2:
+			traindata = np.loadtxt(  "Data_OneStepAhead/Sunspot/train.txt")
+			testdata	= np.loadtxt( "Data_OneStepAhead/Sunspot/test.txt")	#
+			name	= "Sunspot"
+		if problem ==	3:
+			traindata = np.loadtxt("Data_OneStepAhead/Mackey/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Mackey/test.txt")  #
+			name	= "Mackey"
+		if problem ==	4:
+			traindata = np.loadtxt("Data_OneStepAhead/Lorenz/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Lorenz/test.txt")  #
+			name	= "Lorenz"
+		if problem ==	5:
+			traindata = np.loadtxt( "Data_OneStepAhead/Rossler/train.txt")
+			testdata	= np.loadtxt( "Data_OneStepAhead/Rossler/test.txt")	#
+			name	= "Rossler"
+		if problem ==	6:
+			traindata = np.loadtxt("Data_OneStepAhead/Henon/train.txt")
+			testdata	= np.loadtxt("Data_OneStepAhead/Henon/test.txt")	#
+			name	= "Henon"
+		if problem ==	7:
+			traindata = np.loadtxt("Data_OneStepAhead/ACFinance/train.txt") 
+			testdata	= np.loadtxt("Data_OneStepAhead/ACFinance/test.txt")	#
+			name	= "ACFinance"
+		
+		###############################
+		#THESE ARE THE HYPERPARAMETERS#
+		###############################
 
-		problem = i
-		separate_flag = False
-		print(problem, ' problem')
+		hidden = 5
+		ip = 4 #input
+		output = 1
+		topology = [ip, hidden, output]
 
-		#DATA PREPROCESSING 
-		if problem == 1: #Wine Quality White
-			data  = np.genfromtxt('DATA/winequality-red.csv',delimiter=';')
-			data = data[1:,:] #remove Labels
-			classes = data[:,11].reshape(data.shape[0],1)
-			features = data[:,0:11]
-			separate_flag = True
-			name = "winequality-red"
-			hidden = 50
-			ip = 11 #input
-			output = 10
-			NumSample = 50000 
-		if problem == 3: #IRIS
-			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
-			classes = data[:,4].reshape(data.shape[0],1)-1
-			features = data[:,0:4]
- 
-			separate_flag = True
-			name = "iris"
-			hidden = 12
-			ip = 4 #input
-			output = 3
-			NumSample = 50000 
-		if problem == 2: #Wine Quality White
-			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
-			data = data[1:,:] #remove Labels
-			classes = data[:,11].reshape(data.shape[0],1)
-			features = data[:,0:11]
-			separate_flag = True
-			name = "winequality-white"
-			hidden = 50
-			ip = 11 #input
-			output = 10
-			NumSample = 50000 
-		if problem == 4: #Ionosphere
-			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
-			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
-			name = "Ionosphere"
-			hidden = 50
-			ip = 34 #input
-			output = 2
-			NumSample =50000 
-		if problem == 5: #Cancer
-			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
-			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
-			name = "Cancer"
-			hidden = 12
-			ip = 9 #input
-			output = 2
-			NumSample =50000 
-	
-		if problem == 6: #Bank additional
-			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
-			classes = data[:,20].reshape(data.shape[0],1)
-			features = data[:,0:20]
-			separate_flag = True
-			name = "bank-additional"
-			hidden = 50
-			ip = 20 #input
-			output = 2
-			NumSample = 50000
-		if problem == 7: #PenDigit
-			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
-			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
-			name = "PenDigit"
-			for k in range(16):
-				mean_train = np.mean(traindata[:,k])
-				dev_train = np.std(traindata[:,k]) 
-				traindata[:,k] = (traindata[:,k]-mean_train)/dev_train
-				mean_test = np.mean(testdata[:,k])
-				dev_test = np.std(testdata[:,k]) 
-				testdata[:,k] = (testdata[:,k]-mean_test)/dev_test
-			ip = 16
-			hidden = 30
-			output = 10
-
-			NumSample = 50000 
-		if problem == 8: #Chess
-			data  = np.genfromtxt('DATA/chess.csv',delimiter=';')
-			classes = data[:,6].reshape(data.shape[0],1)
-			features = data[:,0:6]
-			separate_flag = True
-			name = "chess"
-			hidden = 25
-			ip = 6 #input
-			output = 18
-
-			NumSample = 50000
-
-
-			# Rohits set of problems - processed data
- 
-
-
-		#Separating data to train and test
-		if separate_flag is True:
-			#Normalizing Data
-			for k in range(ip):
-				mean = np.mean(features[:,k])
-				dev = np.std(features[:,k])
-				features[:,k] = (features[:,k]-mean)/dev
-			train_ratio = 0.7 #Choosable
-			indices = np.random.permutation(features.shape[0])
-			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
-			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
- 
-
+		NumSample = 50000
 
 
 		###############################
@@ -988,7 +897,7 @@ def main():
  
 		num_chains = 10
 		swap_interval = 100000    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
-		burn_in = 0.6
+		burn_in = 0.2
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
