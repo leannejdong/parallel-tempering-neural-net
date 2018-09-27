@@ -217,9 +217,7 @@ class ptReplica(multiprocessing.Process):
 				if j == y[i]:
 					z[i,j] = 1
 				lhood += z[i,j]*np.log(prob[i,j])
- 
-
-		time.sleep(3)  
+  
 
 		return [lhood/self.temperature, fx, rmse]
 
@@ -1069,7 +1067,7 @@ def main():
 
 		rmse_tes = np.mean(rmse_test[:])
 		rmsetest_std = np.std(rmse_test[:])
-		rmsetes_max = np.amax(acc_train[:])
+		rmsetes_max = np.amax(rmse_test[:])
 
 		outres = open(path+'/result.txt', "a+")
 		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f')

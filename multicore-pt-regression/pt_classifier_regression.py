@@ -177,19 +177,11 @@ class ptReplica(multiprocessing.Process):
 	def rmse(self, pred, actual): 
 
 		return np.sqrt(((pred-actual)**2).mean())
-
-	def accuracy(self,pred,actual ):
-		count = 0
-		for i in range(pred.shape[0]):
-			if pred[i] == actual[i]:
-				count+=1 
  
 
-		return 100*(count/pred.shape[0])
-
-	def likelihood_func(self, fnn, data, w):
+	'''def likelihood_func(self, fnn, data, w):
 		y = data[:, self.topology[0]]
-		fx, prob = fnn.evaluate_proposal(data,w)
+		fx  = fnn.evaluate_proposal(data,w)
 		rmse = self.rmse(fx,y)
 		z = np.zeros((data.shape[0],self.topology[2]))
 		lhood = 0
@@ -198,18 +190,32 @@ class ptReplica(multiprocessing.Process):
 				if j == y[i]:
 					z[i,j] = 1
 				lhood += z[i,j]*np.log(prob[i,j])
- 
+  
 
-		time.sleep(3)  
+		return [lhood/self.temperature, fx, rmse]'''
 
-		return [lhood/self.temperature, fx, rmse]
 
-	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
+	def likelihood_func(self, fnn, data, w, tau_sq):
+		y = data[:, self.topology[0]]
+		fx = fnn.evaluate_proposal(data,w)
+		rmse = self.rmse(fx, y)
+		loss = np.sum(-0.5*np.log(2*math.pi*tau_sq) - 0.5*np.square(y-fx)/tau_sq)
+		return [np.sum(loss)/self.temperature, fx, rmse]
+
+	'''def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
 		h = self.topology[1]  # number hidden neurons
 		d = self.topology[0]  # number input neurons
 		part1 = -1 * ((d * h + h + self.topology[2]+h*self.topology[2]) / 2) * np.log(sigma_squared)
 		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
 		log_loss = part1 - part2
+		return log_loss'''
+
+	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
+		h = self.topology[1]  # number hidden neurons
+		d = self.topology[0]  # number input neurons
+		part1 = -1 * ((d * h + h + 2) / 2) * np.log(sigma_squared)
+		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
+		log_loss = part1 - part2  - (1 + nu_1) * np.log(tausq) - (nu_2 / tausq)
 		return log_loss
 
 	def run(self):
@@ -247,25 +253,33 @@ class ptReplica(multiprocessing.Process):
 		w_proposal = np.random.randn(w_size)
 		#Randomwalk Steps
 		step_w = 0.025
+
+		step_eta = 0.2
 		#Declare FNN
 		fnn = Network(self.topology, self.traindata, self.testdata, learn_rate)
+
+		print(self.topology, ' topo')
 		#Evaluate Proposals
-		pred_train, prob_train = fnn.evaluate_proposal(self.traindata,w) #	
-		pred_test, prob_test = fnn.evaluate_proposal(self.testdata, w) #
+		pred_train  = fnn.evaluate_proposal(self.traindata,w) #	
+		pred_test  = fnn.evaluate_proposal(self.testdata, w) #
 		#Check Variance of Proposal
+
+		eta = np.log(np.var(pred_train - y_train))
+		tau_pro = np.exp(eta)
+
 		sigma_squared = 25
 		nu_1 = 0
 		nu_2 = 0
 		sigma_diagmat = np.zeros((w_size, w_size))  # for Equation 9 in Ref [Chandra_ICONIP2017]
 		np.fill_diagonal(sigma_diagmat, step_w)
 
-		delta_likelihood = 0.5 # an arbitrary position
-		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w)  # takes care of the gradients
-		#Evaluate Likelihoods
-		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w)
-		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
-		#Beginning Sampling using MCMC RANDOMWALK
-		
+		delta_likelihood = 0.5 # an arbitrary position 
+		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w, tau_pro)  # takes care of the gradients
+
+ 
+
+		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w, tau_pro)
+		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w, tau_pro)
  
 
 		trainacc = 0
@@ -310,10 +324,8 @@ class ptReplica(multiprocessing.Process):
 				second = -0.5 * np.sum(wp_delta * wp_delta ) / sigma_sq
 
 			
-				diff_prop =  first - second
-
-				diff_prop =  diff_prop/self.temperature 
-
+				diff_prop =  first - second 
+				diff_prop =  diff_prop/self.temperature  
 				langevin_count = langevin_count + 1
 
 				
@@ -321,29 +333,24 @@ class ptReplica(multiprocessing.Process):
 			else:
 				diff_prop = 0
 				w_proposal = np.random.normal(w, step_w, w_size)
-   
 
-# no need since priors take care of this issue
-			'''for j in range(w.size):
-				if w_proposal[j] > self.maxlim_param[j]:
-					w_proposal[j] = w[j]
-				elif w_proposal[j] < self.minlim_param[j]:
-					w_proposal[j] = w[j]'''
+			eta_pro = eta + np.random.normal(0, step_eta, 1)
+			tau_pro = math.exp(eta_pro)
+    
+  
 
+			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal,tau_pro) 
+
+			[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal,tau_pro)
+			
+			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal,tau_pro)  # takes care of the gradients
+			diff_prior = prior_prop - prior_current
+			diff_likelihood = likelihood_proposal - likelihood
  
-			 
-			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal)
-
-			[likelihood_ignore, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal)
 
 			surg_likeh_list[i+1,0] = likelihood_proposal
-			surg_likeh_list[i+1,1] = np.nan
-
-			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal)  # takes care of the gradients
-			
-			diff_likelihood = likelihood_proposal - likelihood
-
-			diff_prior = prior_prop - prior_current
+			#surg_likeh_list[i+1,1] = np.nan  
+ 
 			try:
 				mh_prob = min(1, math.exp(diff_likelihood+diff_prior+ diff_prop))
 
@@ -373,8 +380,10 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal 
 
-				acc_train[i+1,] = self.accuracy(pred_train, y_train )  
-				acc_test[i+1,] = self.accuracy(pred_test, y_test )
+				eta = eta_pro
+
+				acc_train[i+1,] = 0
+				acc_test[i+1,] = 0
 
 				print (i, langevin_count, self.temperature, diff_prop ,  likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
 
@@ -435,9 +444,9 @@ class ptReplica(multiprocessing.Process):
 		#file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
 		#np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
 		file_name = self.path+'/predictions/rmse_test_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, rmse_test, fmt='%1.2f')		
+		np.savetxt(file_name, rmse_test, fmt='%1.8f')		
 		file_name = self.path+'/predictions/rmse_train_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, rmse_train, fmt='%1.2f')
+		np.savetxt(file_name, rmse_train, fmt='%1.8f')
 
 
 		file_name = self.path+'/predictions/acc_test_chain_'+ str(self.temperature)+ '.txt'
@@ -830,7 +839,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(1, 2) : 
+	for i in range(1, 8) : 
 
 		problem =	i
 		if problem ==	1:
@@ -871,7 +880,7 @@ def main():
 		output = 1
 		topology = [ip, hidden, output]
 
-		NumSample = 50000
+		NumSample = 100000
 
 
 		###############################
@@ -881,14 +890,13 @@ def main():
 
 		netw = topology
 
+		print(traindata)
+
 
 
 
 		y_test =  testdata[:,netw[0]]
-		y_train =  traindata[:,netw[0]]
-
-		#NumSample = NumSample * 0.1
-
+		y_train =  traindata[:,netw[0]] 
  
 
 
@@ -897,18 +905,18 @@ def main():
  
 		num_chains = 10
 		swap_interval = 100000    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
-		burn_in = 0.2
+		burn_in = 0.6
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False# False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients = True  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_LangevinResults_rw_delay3sec/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_TimeSeriesResults_Lang001/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_LangevinResults_rw_delay3sec/'  # save main results
+		problemfolder_db = 'PT_TimeSeriesResults_Lang001/'  # save main results
 
 	
 
@@ -962,64 +970,71 @@ def main():
 
 		#PLOTS 
 
-		acc_tr = np.mean(acc_train [:])
+		'''acc_tr = np.mean(acc_train [:])
 		acctr_std = np.std(acc_train[:]) 
 		acctr_max = np.amax(acc_train[:])
 
 		acc_tes = np.mean(acc_test[:])
 		acctest_std = np.std(acc_test[:]) 
-		acctes_max = np.amax(acc_test[:])
+		acctes_max = np.amax(acc_test[:])'''
 	
 
 
 		rmse_tr = np.mean(rmse_train[:])
 		rmsetr_std = np.std(rmse_train[:])
-		rmsetr_max = np.amax(acc_train[:])
+		rmsetr_max = np.amin(rmse_train[:])
 
 		rmse_tes = np.mean(rmse_test[:])
 		rmsetest_std = np.std(rmse_test[:])
-		rmsetes_max = np.amax(acc_train[:])
+		rmsetes_max = np.amin(rmse_test[:])
 
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f')
-		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
-		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
+		np.savetxt(outres, ( use_langevin_gradients, learn_rate, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept, timetotal), fmt='%1.5f')
+		print (  rmse_tr, rmsetr_max, rmse_tes, rmsetes_max)  
+		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.5f')
 
 
 		outres_db = open(path_db+'/result.txt', "a+")
-		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f') 
-		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
+		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,   rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept, timetotal), fmt='%1.5f') 
+		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.5f')
 
 
  
 
-		x = np.linspace(0, acc_train.shape[0] , num=acc_train.shape[0])
+		x = np.linspace(0, rmse_train.shape[0] , num=rmse_train.shape[0])
 
 
 
-		plt.plot(x, acc_train,  label='Test')
-		plt.plot(x, acc_test,  label='Train') 
+		plt.plot(x, rmse_train,  label='Test')
+		plt.plot(x, rmse_test,  label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of Classification Acc. over time")
+		plt.title("Plot of RMSE over time")
 		plt.savefig(path+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot(  acc_train,  label='Test')
-		plt.plot(  acc_test,   label='Train') 
+		plt.plot( rmse_train,  label='Test')
+		plt.plot(  rmse_test,   label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of Classification Acc. over time")
+		plt.title("Plot of RMSE over time")
 		plt.savefig(path_db+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot( rmse_train,  label='Test')
-		plt.plot( rmse_test,   label='Train') 
+
+		'''rmse_train =  np.split(rmse_train, num_chains)
+		print(rmse_train.T, ' rmse_tr -- ')
+
+		rmse_test = np.asarray(np.split(rmse_test, num_chains))
+
+
+		plt.plot( rmse_train.T,  label='Test')
+		plt.plot( rmse_test.T,   label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of EMSE over time")
-		plt.savefig(path+'/rmse_samples.png') 
-		plt.clf()
+		plt.title("Accuracy -  sampling  time")
+		plt.savefig(path_db+'/rmse_samples.png') 
+		plt.clf()'''
 
 
 
@@ -1027,8 +1042,8 @@ def main():
 		likelihood = likelihood_rep[:,0] # just plot proposed likelihood
 		likelihood = np.asarray(np.split(likelihood, num_chains))
 
-		print(accept_vec)
-
+		#print(likelihood, ' rmse_tr -- ')
+ 
 
 	 
 	# Plots
