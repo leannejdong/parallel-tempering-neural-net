@@ -299,7 +299,7 @@ class ptReplica(multiprocessing.Process):
 
 		langevin_count = 0
 
-		pt_samples = samples * 0.5 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
+		pt_samples = samples * 0.8 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
 
 
  
@@ -991,7 +991,7 @@ def main():
 		y_test =  testdata[:,netw[0]]
 		y_train =  traindata[:,netw[0]]
 
-		#NumSample = NumSample * 0.1
+		NumSample = NumSample * 0.2
 
  
 
@@ -1090,32 +1090,24 @@ def main():
 		rmsetes_max = np.amax(rmse_test[:])
 
 		outres = open(path+'/result.txt', "a+") 
-		outres_db = open(path_db+'/result.txt', "a+")
-
+		outres_db = open(path_db+'/result.txt', "a+") 
 
 		resultingfile = open(problemfolder+'/master_result_file.txt','a+')  
-		resultingfile_db = open( problemfolder_db+'/master_result_file.txt','a+')  
+		resultingfile_db = open( problemfolder_db+'/master_result_file.txt','a+') 
 
+		xv = name+'_'+ str(run_nb) 
 
-
-		print (  acc_tr, acctr_max, acc_tes, acctes_max)   
-
-
+		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
 		allres =  np.asarray([ problem, NumSample, maxtemp, swap_interval, use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept_per, timetotal]) 
-		print(allres)
- 
-	 
+		 
 		np.savetxt(outres_db,  allres   , fmt='%1.2f', newline=' '  )   
 		np.savetxt(resultingfile_db,   allres   , fmt='%1.2f',  newline=' ' ) 
-		np.savetxt(resultingfile_db, [problem]   ,  fmt='%1.2f', newline=' \n' )  
+		np.savetxt(resultingfile_db, [xv]   ,  fmt="%s", newline=' \n' )  
 
 
 		np.savetxt(outres,  allres   , fmt='%1.2f', newline=' '  )   
 		np.savetxt(resultingfile,   allres   , fmt='%1.2f',  newline=' ' ) 
-		np.savetxt(resultingfile, [problem]   ,  fmt='%1.2f', newline=' \n' )  
-
-
- 
+		np.savetxt(resultingfile, [xv]   ,  fmt="%s", newline=' \n' )  
 
 		x = np.linspace(0, acc_train.shape[0] , num=acc_train.shape[0])
 
