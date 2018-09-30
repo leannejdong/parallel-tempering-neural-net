@@ -299,7 +299,7 @@ class ptReplica(multiprocessing.Process):
 
 		langevin_count = 0
 
-		pt_samples = samples * 0.2 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
+		pt_samples = samples * 0.5 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
 
 
  
@@ -429,7 +429,7 @@ class ptReplica(multiprocessing.Process):
 
 				#x = x + 1
 			#SWAPPING PREP
-			if i%self.swap_interval == 0 and i > pt_samples:
+			if i%self.swap_interval == 0:
 				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature]),np.asarray([i])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
@@ -929,7 +929,7 @@ def main():
 			hidden = 50
 			ip = 20 #input
 			output = 2
-			NumSample = 50000
+			NumSample = 50000 
 		if problem == 7: #PenDigit
 			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
 			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
@@ -1000,7 +1000,7 @@ def main():
 		maxtemp = 4
  
 		num_chains = 10
-		swap_interval = 100     # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		swap_interval = 100000     # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
 		burn_in = 0.4
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
@@ -1035,9 +1035,6 @@ def main():
 
 
  
-		resultingfile = open( path+'/master_result_file.txt','a+') 
-
-		resultingfile_db = open( path_db+'/master_result_file.txt','a+')  
   
 		timer = time.time() 
 		
@@ -1060,6 +1057,14 @@ def main():
  
 
 		timer2 = time.time()
+
+		list_end = accept_vec.shape[1] 
+		accept_ratio = accept_vec[:,  list_end-1:list_end]/list_end   
+ 		accept_per = np.mean(accept_ratio) * 100
+
+ 		print(accept_per, ' accept_per')
+
+
 
 		timetotal = (timer2 - timer) /60
 		print ((timetotal), 'min taken')
@@ -1084,15 +1089,30 @@ def main():
 		rmsetest_std = np.std(rmse_test[:])
 		rmsetes_max = np.amax(rmse_test[:])
 
-		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f')
-		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
-		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
-
-
+		outres = open(path+'/result.txt', "a+") 
 		outres_db = open(path_db+'/result.txt', "a+")
-		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f') 
-		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
+
+
+		resultingfile = open(problemfolder+'/master_result_file.txt','a+')  
+		resultingfile_db = open( problemfolder_db+'/master_result_file.txt','a+')  
+
+
+
+		print (  acc_tr, acctr_max, acc_tes, acctes_max)   
+
+
+		allres =  np.asarray([ problem, NumSample, maxtemp, swap_interval, use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept_per, timetotal]) 
+		print(allres)
+ 
+	 
+		np.savetxt(outres_db,  allres   , fmt='%1.2f', newline=' '  )   
+		np.savetxt(resultingfile_db,   allres   , fmt='%1.2f',  newline=' ' ) 
+		np.savetxt(resultingfile_db, [problem]   ,  fmt='%1.2f', newline=' \n' )  
+
+
+		np.savetxt(outres,  allres   , fmt='%1.2f', newline=' '  )   
+		np.savetxt(resultingfile,   allres   , fmt='%1.2f',  newline=' ' ) 
+		np.savetxt(resultingfile, [problem]   ,  fmt='%1.2f', newline=' \n' )  
 
 
  
