@@ -1,0 +1,7 @@
+
+Langevin in Surr PT is not working. 
+All other results are done but with posterior that contains all chains. This needs to be fixed with adaptive temp.
+
+Sep 29. 
+
+

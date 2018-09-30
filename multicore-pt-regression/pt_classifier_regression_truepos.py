@@ -739,22 +739,22 @@ class ParallelTempering:
 
 		burnin = int(self.NumSamples*self.burn_in)
  
-		likelihood_rep = np.zeros((self.num_chains, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
-	 	accept_percent = np.zeros((self.num_chains, 1))
-		accept_list = np.zeros((self.num_chains, self.NumSamples )) 
+		likelihood_rep = np.zeros((1, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
+	 	accept_percent = np.zeros((1, 1))
+		accept_list = np.zeros((1, self.NumSamples )) 
  
-		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param)) 
+		pos_w = np.zeros((1,self.NumSamples - burnin, self.num_param)) 
 
-		fx_train_all  = np.zeros((self.num_chains,self.NumSamples - burnin, self.traindata.shape[0]))
-		rmse_train = np.zeros((self.num_chains,self.NumSamples - burnin))
-		acc_train = np.zeros((self.num_chains,self.NumSamples - burnin))
-		fx_test_all  = np.zeros((self.num_chains,self.NumSamples - burnin, self.testdata.shape[0]))
-		rmse_test = np.zeros((self.num_chains,self.NumSamples - burnin))
-		acc_test = np.zeros((self.num_chains,self.NumSamples - burnin))
+		fx_train_all  = np.zeros((1,self.NumSamples - burnin, self.traindata.shape[0]))
+		rmse_train = np.zeros((1,self.NumSamples - burnin))
+		acc_train = np.zeros((1,self.NumSamples - burnin))
+		fx_test_all  = np.zeros((1,self.NumSamples - burnin, self.testdata.shape[0]))
+		rmse_test = np.zeros((1,self.NumSamples - burnin))
+		acc_test = np.zeros((1,self.NumSamples - burnin))
  
 		
 		 
-		for i in range(self.num_chains):
+		for i in  range(0, 1): #range(self.num_chains):
 			file_name = self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
 			pos_w[i,:,:] = dat[burnin:,:]  
@@ -804,10 +804,10 @@ class ParallelTempering:
 
 		likelihood_vec = likelihood_rep.transpose(2,0,1).reshape(2,-1) 
 
-		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		acc_train = acc_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
+		rmse_train = rmse_train.reshape(1*(self.NumSamples - burnin), 1)
+		acc_train = acc_train.reshape(1*(self.NumSamples - burnin), 1)
+		rmse_test = rmse_test.reshape(1*(self.NumSamples - burnin), 1)
+		acc_test = acc_test.reshape(1*(self.NumSamples - burnin), 1)
 
 
 		accept_vec  = accept_list 
@@ -904,8 +904,8 @@ def main():
 		maxtemp = i
  
 		num_chains =  10
-		swap_interval = 100000    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
-		burn_in = 0.6
+		swap_interval = 20    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		burn_in = 0.4
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
@@ -914,9 +914,9 @@ def main():
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_TimeSeriesResults_evalmaxtemp_/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_TimeSeriesResults_evalmaxtemp_truepos/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_TimeSeriesResults_evalmaxtemp_/'  # save main results
+		problemfolder_db = 'PT_TimeSeriesResults_evalmaxtemp_truepos/'  # save main results
 
 	
 

@@ -23,7 +23,6 @@ from scipy.stats import norm
 
 import io  
 
-
 class Network:
 
 	def __init__(self, Topo, Train, Test, learn_rate):
@@ -31,14 +30,13 @@ class Network:
 		self.TrainData = Train
 		self.TestData = Test
 		self.lrate = learn_rate
-
 		self.W1 = np.random.randn(self.Top[0], self.Top[1]) / np.sqrt(self.Top[0])
 		self.B1 = np.random.randn(1, self.Top[1]) / np.sqrt(self.Top[1])  # bias first layer
 		self.W2 = np.random.randn(self.Top[1], self.Top[2]) / np.sqrt(self.Top[1])
 		self.B2 = np.random.randn(1, self.Top[2]) / np.sqrt(self.Top[1])  # bias second layer
-
 		self.hidout = np.zeros((1, self.Top[1]))  # output of first hidden layer
 		self.out = np.zeros((1, self.Top[2]))  # output last layer
+		self.pred_class = 0
 
 	def sigmoid(self, x):
 		return 1 / (1 + np.exp(-x))
@@ -54,28 +52,35 @@ class Network:
 		z2 = self.hidout.dot(self.W2) - self.B2
 		self.out = self.sigmoid(z2)  # output second hidden layer
 
-	def BackwardPass(self, Input, desired):
-		out_delta = (desired - self.out) * (self.out * (1 - self.out))
+		self.pred_class = np.argmax(self.out)
+
+
+		#print(self.pred_class, self.out, '  ---------------- out ')
+
+	'''def BackwardPass(self, Input, desired):
+		out_delta = (desired - self.out).dot(self.out.dot(1 - self.out))
 		hid_delta = out_delta.dot(self.W2.T) * (self.hidout * (1 - self.hidout))
+		print(self.B2.shape)
+		self.W2 += (self.hidout.T.reshape(self.Top[1],1).dot(out_delta) * self.lrate)
+		self.B2 += (-1 * self.lrate * out_delta)
+		self.W1 += (Input.T.reshape(self.Top[0],1).dot(hid_delta) * self.lrate)
+		self.B1 += (-1 * self.lrate * hid_delta)'''
 
-		#self.W2 += (self.hidout.T.dot(out_delta) * self.lrate)
-		#self.B2 += (-1 * self.lrate * out_delta)
-		#self.W1 += (Input.T.dot(hid_delta) * self.lrate)
-		#self.B1 += (-1 * self.lrate * hid_delta)
 
-		layer = 1  # hidden to output
-		for x in range(0, self.Top[layer]):
-			for y in range(0, self.Top[layer + 1]):
-				self.W2[x, y] += self.lrate * out_delta[y] * self.hidout[x]
-		for y in range(0, self.Top[layer + 1]):
-			self.B2[y] += -1 * self.lrate * out_delta[y]
+ 
 
-		layer = 0  # Input to Hidden
-		for x in range(0, self.Top[layer]):
-			for y in range(0, self.Top[layer + 1]):
-				self.W1[x, y] += self.lrate * hid_delta[y] * Input[x]
-		for y in range(0, self.Top[layer + 1]):
-			self.B1[y] += -1 * self.lrate * hid_delta[y]
+	def BackwardPass(self, Input, desired): # since data outputs and number of output neuons have different orgnisation
+		onehot = np.zeros((desired.size, self.Top[2]))
+		onehot[np.arange(desired.size),int(desired)] = 1
+		desired = onehot
+		out_delta = (desired - self.out)*(self.out*(1 - self.out))
+		hid_delta = np.dot(out_delta,self.W2.T) * (self.hidout * (1 - self.hidout))
+		self.W2 += np.dot(self.hidout.T,(out_delta * self.lrate))
+		self.B2 += (-1 * self.lrate * out_delta)
+		Input = Input.reshape(1,self.Top[0])
+		self.W1 += np.dot(Input.T,(hid_delta * self.lrate))
+		self.B1 += (-1 * self.lrate * hid_delta)
+
 
 	def decode(self, w):
 		w_layer1size = self.Top[0] * self.Top[1]
@@ -86,15 +91,25 @@ class Network:
 
 		w_layer2 = w[w_layer1size:w_layer1size + w_layer2size]
 		self.W2 = np.reshape(w_layer2, (self.Top[1], self.Top[2]))
-		self.B1 = w[w_layer1size + w_layer2size:w_layer1size + w_layer2size + self.Top[1]]
-		self.B2 = w[w_layer1size + w_layer2size + self.Top[1]:w_layer1size + w_layer2size + self.Top[1] + self.Top[2]]
+		self.B1 = w[w_layer1size + w_layer2size:w_layer1size + w_layer2size + self.Top[1]].reshape(1,self.Top[1])
+		self.B2 = w[w_layer1size + w_layer2size + self.Top[1]:w_layer1size + w_layer2size + self.Top[1] + self.Top[2]].reshape(1,self.Top[2])
 
+ 
 
 	def encode(self):
 		w1 = self.W1.ravel()
+		w1 = w1.reshape(1,w1.shape[0])
 		w2 = self.W2.ravel()
-		w = np.concatenate([w1, w2, self.B1, self.B2])
+		w2 = w2.reshape(1,w2.shape[0])
+		w = np.concatenate([w1.T, w2.T, self.B1.T, self.B2.T])
+		w = w.reshape(-1)
 		return w
+
+	def softmax(self):
+		prob = np.exp(self.out)/np.sum(np.exp(self.out))
+		return prob
+ 
+
 
 	def langevin_gradient(self, data, w, depth):  # BP with SGD (Stocastic BP)
 
@@ -112,7 +127,6 @@ class Network:
 				Desired = data[pat, self.Top[0]:]
 				self.ForwardPass(Input)
 				self.BackwardPass(Input, Desired)
-
 		w_updated = self.encode()
 
 		return  w_updated
@@ -125,13 +139,18 @@ class Network:
 		Input = np.zeros((1, self.Top[0]))  # temp hold input
 		Desired = np.zeros((1, self.Top[2]))
 		fx = np.zeros(size)
+		prob = np.zeros((size,self.Top[2]))
 
 		for i in range(0, size):  # to see what fx is produced by your current weight update
 			Input = data[i, 0:self.Top[0]]
 			self.ForwardPass(Input)
-			fx[i] = self.out
+			fx[i] = self.pred_class
+			prob[i] = self.softmax()
 
-		return fx
+		#print(fx, 'fx')
+		#print(prob, 'prob' )
+
+		return fx, prob
  
 
 
@@ -177,11 +196,19 @@ class ptReplica(multiprocessing.Process):
 	def rmse(self, pred, actual): 
 
 		return np.sqrt(((pred-actual)**2).mean())
+
+	def accuracy(self,pred,actual ):
+		count = 0
+		for i in range(pred.shape[0]):
+			if pred[i] == actual[i]:
+				count+=1 
  
 
-	'''def likelihood_func(self, fnn, data, w):
+		return 100*(count/pred.shape[0])
+
+	def likelihood_func(self, fnn, data, w):
 		y = data[:, self.topology[0]]
-		fx  = fnn.evaluate_proposal(data,w)
+		fx, prob = fnn.evaluate_proposal(data,w)
 		rmse = self.rmse(fx,y)
 		z = np.zeros((data.shape[0],self.topology[2]))
 		lhood = 0
@@ -192,30 +219,14 @@ class ptReplica(multiprocessing.Process):
 				lhood += z[i,j]*np.log(prob[i,j])
   
 
-		return [lhood/self.temperature, fx, rmse]'''
+		return [lhood/self.temperature, fx, rmse]
 
-
-	def likelihood_func(self, fnn, data, w, tau_sq):
-		y = data[:, self.topology[0]]
-		fx = fnn.evaluate_proposal(data,w)
-		rmse = self.rmse(fx, y)
-		loss = np.sum(-0.5*np.log(2*math.pi*tau_sq) - 0.5*np.square(y-fx)/tau_sq)
-		return [np.sum(loss)/self.temperature, fx, rmse]
-
-	'''def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
+	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w):
 		h = self.topology[1]  # number hidden neurons
 		d = self.topology[0]  # number input neurons
 		part1 = -1 * ((d * h + h + self.topology[2]+h*self.topology[2]) / 2) * np.log(sigma_squared)
 		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
 		log_loss = part1 - part2
-		return log_loss'''
-
-	def prior_likelihood(self, sigma_squared, nu_1, nu_2, w, tausq):
-		h = self.topology[1]  # number hidden neurons
-		d = self.topology[0]  # number input neurons
-		part1 = -1 * ((d * h + h + 2) / 2) * np.log(sigma_squared)
-		part2 = 1 / (2 * sigma_squared) * (sum(np.square(w)))
-		log_loss = part1 - part2  - (1 + nu_1) * np.log(tausq) - (nu_2 / tausq)
 		return log_loss
 
 	def run(self):
@@ -253,33 +264,25 @@ class ptReplica(multiprocessing.Process):
 		w_proposal = np.random.randn(w_size)
 		#Randomwalk Steps
 		step_w = 0.025
-
-		step_eta = 0.2
 		#Declare FNN
 		fnn = Network(self.topology, self.traindata, self.testdata, learn_rate)
-
-		print(self.topology, ' topo')
 		#Evaluate Proposals
-		pred_train  = fnn.evaluate_proposal(self.traindata,w) #	
-		pred_test  = fnn.evaluate_proposal(self.testdata, w) #
+		pred_train, prob_train = fnn.evaluate_proposal(self.traindata,w) #	
+		pred_test, prob_test = fnn.evaluate_proposal(self.testdata, w) #
 		#Check Variance of Proposal
-
-		eta = np.log(np.var(pred_train - y_train))
-		tau_pro = np.exp(eta)
-
 		sigma_squared = 25
 		nu_1 = 0
 		nu_2 = 0
 		sigma_diagmat = np.zeros((w_size, w_size))  # for Equation 9 in Ref [Chandra_ICONIP2017]
 		np.fill_diagonal(sigma_diagmat, step_w)
 
-		delta_likelihood = 0.5 # an arbitrary position 
-		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w, tau_pro)  # takes care of the gradients
-
- 
-
-		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w, tau_pro)
-		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w, tau_pro)
+		delta_likelihood = 0.5 # an arbitrary position
+		prior_current = self.prior_likelihood(sigma_squared, nu_1, nu_2, w)  # takes care of the gradients
+		#Evaluate Likelihoods
+		[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w)
+		[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
+		#Beginning Sampling using MCMC RANDOMWALK
+		
  
 
 		trainacc = 0
@@ -324,8 +327,10 @@ class ptReplica(multiprocessing.Process):
 				second = -0.5 * np.sum(wp_delta * wp_delta ) / sigma_sq
 
 			
-				diff_prop =  first - second 
-				diff_prop =  diff_prop/self.temperature  
+				diff_prop =  first - second
+
+				diff_prop =  diff_prop/self.temperature 
+
 				langevin_count = langevin_count + 1
 
 				
@@ -333,24 +338,29 @@ class ptReplica(multiprocessing.Process):
 			else:
 				diff_prop = 0
 				w_proposal = np.random.normal(w, step_w, w_size)
+   
 
-			eta_pro = eta + np.random.normal(0, step_eta, 1)
-			tau_pro = math.exp(eta_pro)
-    
-  
+# no need since priors take care of this issue
+			'''for j in range(w.size):
+				if w_proposal[j] > self.maxlim_param[j]:
+					w_proposal[j] = w[j]
+				elif w_proposal[j] < self.minlim_param[j]:
+					w_proposal[j] = w[j]'''
 
-			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal,tau_pro) 
-
-			[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal,tau_pro)
-			
-			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal,tau_pro)  # takes care of the gradients
-			diff_prior = prior_prop - prior_current
-			diff_likelihood = likelihood_proposal - likelihood
  
+			 
+			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal)
+
+			[likelihood_ignore, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w_proposal)
 
 			surg_likeh_list[i+1,0] = likelihood_proposal
-			#surg_likeh_list[i+1,1] = np.nan  
- 
+			surg_likeh_list[i+1,1] = np.nan
+
+			prior_prop = self.prior_likelihood(sigma_squared, nu_1, nu_2, w_proposal)  # takes care of the gradients
+			
+			diff_likelihood = likelihood_proposal - likelihood
+
+			diff_prior = prior_prop - prior_current
 			try:
 				mh_prob = min(1, math.exp(diff_likelihood+diff_prior+ diff_prop))
 
@@ -380,10 +390,8 @@ class ptReplica(multiprocessing.Process):
 				prior_current = prior_prop
 				w = w_proposal 
 
-				eta = eta_pro
-
-				acc_train[i+1,] = 0
-				acc_test[i+1,] = 0
+				acc_train[i+1,] = self.accuracy(pred_train, y_train )  
+				acc_test[i+1,] = self.accuracy(pred_test, y_test )
 
 				print (i, langevin_count, self.temperature, diff_prop ,  likelihood, rmsetrain, rmsetest, acc_train[i+1,], acc_test[i+1,] , 'accepted') 
 
@@ -444,9 +452,9 @@ class ptReplica(multiprocessing.Process):
 		#file_name = self.path+'/predictions/fxtest_samples_chain_'+ str(self.temperature)+ '.txt'
 		#np.savetxt(file_name, fxtest_samples, fmt='%1.2f')		
 		file_name = self.path+'/predictions/rmse_test_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, rmse_test, fmt='%1.8f')		
+		np.savetxt(file_name, rmse_test, fmt='%1.2f')		
 		file_name = self.path+'/predictions/rmse_train_chain_'+ str(self.temperature)+ '.txt'
-		np.savetxt(file_name, rmse_train, fmt='%1.8f')
+		np.savetxt(file_name, rmse_train, fmt='%1.2f')
 
 
 		file_name = self.path+'/predictions/acc_test_chain_'+ str(self.temperature)+ '.txt'
@@ -739,22 +747,25 @@ class ParallelTempering:
 
 		burnin = int(self.NumSamples*self.burn_in)
  
-		likelihood_rep = np.zeros((self.num_chains, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
-	 	accept_percent = np.zeros((self.num_chains, 1))
-		accept_list = np.zeros((self.num_chains, self.NumSamples )) 
+		likelihood_rep = np.zeros((1, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
+	 	accept_percent = np.zeros((1, 1))
+		accept_list = np.zeros((1, self.NumSamples )) 
  
-		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param)) 
+		pos_w = np.zeros((1,self.NumSamples - burnin, self.num_param)) 
 
-		fx_train_all  = np.zeros((self.num_chains,self.NumSamples - burnin, self.traindata.shape[0]))
-		rmse_train = np.zeros((self.num_chains,self.NumSamples - burnin))
-		acc_train = np.zeros((self.num_chains,self.NumSamples - burnin))
-		fx_test_all  = np.zeros((self.num_chains,self.NumSamples - burnin, self.testdata.shape[0]))
-		rmse_test = np.zeros((self.num_chains,self.NumSamples - burnin))
-		acc_test = np.zeros((self.num_chains,self.NumSamples - burnin))
+		fx_train_all  = np.zeros((1,self.NumSamples - burnin, self.traindata.shape[0]))
+		rmse_train = np.zeros((1,self.NumSamples - burnin))
+		acc_train = np.zeros((1,self.NumSamples - burnin))
+		fx_test_all  = np.zeros((1,self.NumSamples - burnin, self.testdata.shape[0]))
+		rmse_test = np.zeros((1,self.NumSamples - burnin))
+		acc_test = np.zeros((1,self.NumSamples - burnin))
  
 		
 		 
-		for i in range(self.num_chains):
+		#for i in range(self.num_chains):
+
+
+		for i in range(0, 1):
 			file_name = self.path+'/posterior/pos_w/'+'chain_'+ str(self.temperatures[i])+ '.txt'
 			dat = np.loadtxt(file_name)
 			pos_w[i,:,:] = dat[burnin:,:]  
@@ -804,10 +815,10 @@ class ParallelTempering:
 
 		likelihood_vec = likelihood_rep.transpose(2,0,1).reshape(2,-1) 
 
-		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		acc_train = acc_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
+		rmse_train = rmse_train.reshape(1*(self.NumSamples - burnin), 1)
+		acc_train = acc_train.reshape(1*(self.NumSamples - burnin), 1)
+		rmse_test = rmse_test.reshape(1*(self.NumSamples - burnin), 1)
+		acc_test = acc_test.reshape(1*(self.NumSamples - burnin), 1)
 
 
 		accept_vec  = accept_list 
@@ -839,48 +850,120 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(2, 12, 2) : 
+	for i in range(5, 9) :
 
-		problem =	2
-		if problem ==	1:
-			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
-			name	= "Lazer"
-		if problem ==	2:
-			traindata = np.loadtxt(  "Data_OneStepAhead/Sunspot/train.txt")
-			testdata	= np.loadtxt( "Data_OneStepAhead/Sunspot/test.txt")	#
-			name	= "Sunspot"
-		if problem ==	3:
-			traindata = np.loadtxt("Data_OneStepAhead/Mackey/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Mackey/test.txt")  #
-			name	= "Mackey"
-		if problem ==	4:
-			traindata = np.loadtxt("Data_OneStepAhead/Lorenz/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Lorenz/test.txt")  #
-			name	= "Lorenz"
-		if problem ==	5:
-			traindata = np.loadtxt( "Data_OneStepAhead/Rossler/train.txt")
-			testdata	= np.loadtxt( "Data_OneStepAhead/Rossler/test.txt")	#
-			name	= "Rossler"
-		if problem ==	6:
-			traindata = np.loadtxt("Data_OneStepAhead/Henon/train.txt")
-			testdata	= np.loadtxt("Data_OneStepAhead/Henon/test.txt")	#
-			name	= "Henon"
-		if problem ==	7:
-			traindata = np.loadtxt("Data_OneStepAhead/ACFinance/train.txt") 
-			testdata	= np.loadtxt("Data_OneStepAhead/ACFinance/test.txt")	#
-			name	= "ACFinance"
-		
-		###############################
-		#THESE ARE THE HYPERPARAMETERS#
-		###############################
 
-		hidden = 5
-		ip = 4 #input
-		output = 1
-		topology = [ip, hidden, output]
+		problem = i
+		separate_flag = False
+		print(problem, ' problem')
 
-		NumSample = 100000
+		#DATA PREPROCESSING 
+		if problem == 1: #Wine Quality White
+			data  = np.genfromtxt('DATA/winequality-red.csv',delimiter=';')
+			data = data[1:,:] #remove Labels
+			classes = data[:,11].reshape(data.shape[0],1)
+			features = data[:,0:11]
+			separate_flag = True
+			name = "winequality-red"
+			hidden = 50
+			ip = 11 #input
+			output = 10
+			NumSample = 50000 
+		if problem == 3: #IRIS
+			data  = np.genfromtxt('DATA/iris.csv',delimiter=';')
+			classes = data[:,4].reshape(data.shape[0],1)-1
+			features = data[:,0:4]
+ 
+			separate_flag = True
+			name = "iris"
+			hidden = 12
+			ip = 4 #input
+			output = 3
+			NumSample = 50000 
+		if problem == 2: #Wine Quality White
+			data  = np.genfromtxt('DATA/winequality-white.csv',delimiter=';')
+			data = data[1:,:] #remove Labels
+			classes = data[:,11].reshape(data.shape[0],1)
+			features = data[:,0:11]
+			separate_flag = True
+			name = "winequality-white"
+			hidden = 50
+			ip = 11 #input
+			output = 10
+			NumSample = 50000 
+		if problem == 4: #Ionosphere
+			traindata = np.genfromtxt('DATA/Ions/Ions/ftrain.csv',delimiter=',')[:,:-1]
+			testdata = np.genfromtxt('DATA/Ions/Ions/ftest.csv',delimiter=',')[:,:-1]
+			name = "Ionosphere"
+			hidden = 50
+			ip = 34 #input
+			output = 2
+			NumSample =50000 
+		if problem == 5: #Cancer
+			traindata = np.genfromtxt('DATA/Cancer/ftrain.txt',delimiter=' ')[:,:-1]
+			testdata = np.genfromtxt('DATA/Cancer/ftest.txt',delimiter=' ')[:,:-1]
+			name = "Cancer"
+			hidden = 12
+			ip = 9 #input
+			output = 2
+			NumSample =50000 
+	
+		if problem == 6: #Bank additional
+			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
+			classes = data[:,20].reshape(data.shape[0],1)
+			features = data[:,0:20]
+			separate_flag = True
+			name = "bank-additional"
+			hidden = 50
+			ip = 20 #input
+			output = 2
+			NumSample = 50000
+		if problem == 7: #PenDigit
+			traindata = np.genfromtxt('DATA/PenDigit/train.csv',delimiter=',')
+			testdata = np.genfromtxt('DATA/PenDigit/test.csv',delimiter=',')
+			name = "PenDigit"
+			for k in range(16):
+				mean_train = np.mean(traindata[:,k])
+				dev_train = np.std(traindata[:,k]) 
+				traindata[:,k] = (traindata[:,k]-mean_train)/dev_train
+				mean_test = np.mean(testdata[:,k])
+				dev_test = np.std(testdata[:,k]) 
+				testdata[:,k] = (testdata[:,k]-mean_test)/dev_test
+			ip = 16
+			hidden = 30
+			output = 10
+
+			NumSample = 50000 
+		if problem == 8: #Chess
+			data  = np.genfromtxt('DATA/chess.csv',delimiter=';')
+			classes = data[:,6].reshape(data.shape[0],1)
+			features = data[:,0:6]
+			separate_flag = True
+			name = "chess"
+			hidden = 25
+			ip = 6 #input
+			output = 18
+
+			NumSample = 50000
+
+
+			# Rohits set of problems - processed data
+ 
+
+
+		#Separating data to train and test
+		if separate_flag is True:
+			#Normalizing Data
+			for k in range(ip):
+				mean = np.mean(features[:,k])
+				dev = np.std(features[:,k])
+				features[:,k] = (features[:,k]-mean)/dev
+			train_ratio = 0.7 #Choosable
+			indices = np.random.permutation(features.shape[0])
+			traindata = np.hstack([features[indices[:np.int(train_ratio*features.shape[0])],:],classes[indices[:np.int(train_ratio*features.shape[0])],:]])
+			testdata = np.hstack([features[indices[np.int(train_ratio*features.shape[0])]:,:],classes[indices[np.int(train_ratio*features.shape[0])]:,:]])
+ 
+
 
 
 		###############################
@@ -890,33 +973,34 @@ def main():
 
 		netw = topology
 
-		print(traindata)
-
 
 
 
 		y_test =  testdata[:,netw[0]]
-		y_train =  traindata[:,netw[0]] 
+		y_train =  traindata[:,netw[0]]
+
+		#NumSample = NumSample * 0.1
+
  
 
 
 		 
-		maxtemp = i
+		maxtemp = 4
  
-		num_chains =  10
-		swap_interval = 100000    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
-		burn_in = 0.6
+		num_chains = 10
+		swap_interval = 200    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		burn_in = 0.4
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients = True # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_TimeSeriesResults_evalmaxtemp_/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_LangevinResults_truepos/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_TimeSeriesResults_evalmaxtemp_/'  # save main results
+		problemfolder_db = 'PT_LangevinResults_truepos/'  # save main results
 
 	
 
@@ -961,15 +1045,7 @@ def main():
 		
 		pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,   likelihood_rep , swap_perc,    accept_vec, accept = pt.run_chains()
 
- 		list_end = accept_vec.shape[1] 
-		accept_ratio = accept_vec[:,  list_end-1:list_end]/list_end   
- 		accept_per = np.mean(accept_ratio) * 100
-
- 		print(accept_per, ' accept_per')
-
-
-
-
+ 
 
 		timer2 = time.time()
 
@@ -978,71 +1054,64 @@ def main():
 
 		#PLOTS 
 
-		'''acc_tr = np.mean(acc_train [:])
+		acc_tr = np.mean(acc_train [:])
 		acctr_std = np.std(acc_train[:]) 
 		acctr_max = np.amax(acc_train[:])
 
 		acc_tes = np.mean(acc_test[:])
 		acctest_std = np.std(acc_test[:]) 
-		acctes_max = np.amax(acc_test[:])'''
+		acctes_max = np.amax(acc_test[:])
 	
 
 
 		rmse_tr = np.mean(rmse_train[:])
 		rmsetr_std = np.std(rmse_train[:])
-		rmsetr_max = np.amin(rmse_train[:])
+		rmsetr_max = np.amax(acc_train[:])
 
 		rmse_tes = np.mean(rmse_test[:])
 		rmsetest_std = np.std(rmse_test[:])
-		rmsetes_max = np.amin(rmse_test[:])
+		rmsetes_max = np.amax(rmse_test[:])
 
 		outres = open(path+'/result.txt', "a+")
-		np.savetxt(outres, ( use_langevin_gradients, learn_rate, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept_per, timetotal), fmt='%1.5f')
-		print (  rmse_tr, rmsetr_max, rmse_tes, rmsetes_max)  
-		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.5f')
+		np.savetxt(outres, ( use_langevin_gradients, learn_rate, acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f')
+		print (  acc_tr, acctr_max, acc_tes, acctes_max)  
+		np.savetxt(resultingfile,(NumSample, maxtemp, swap_interval, num_chains, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
 		outres_db = open(path_db+'/result.txt', "a+")
-		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,   rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept_per, timetotal), fmt='%1.5f') 
-		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.5f')
+		np.savetxt(outres_db, (  use_langevin_gradients, learn_rate,  acc_tr, acctr_std, acctr_max, acc_tes, acctest_std, acctes_max, swap_perc, accept, timetotal), fmt='%1.2f') 
+		np.savetxt(resultingfile_db,(NumSample, maxtemp, swap_interval, num_chains,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max ), fmt='%1.2f')
 
 
  
 
-		x = np.linspace(0, rmse_train.shape[0] , num=rmse_train.shape[0])
+		x = np.linspace(0, acc_train.shape[0] , num=acc_train.shape[0])
 
 
 
-		plt.plot(x, rmse_train,  label='Test')
-		plt.plot(x, rmse_test,  label='Train') 
+		plt.plot(x, acc_train,  label='Test')
+		plt.plot(x, acc_test,  label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of RMSE over time")
+		plt.title("Plot of Classification Acc. over time")
 		plt.savefig(path+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot( rmse_train,  label='Test')
-		plt.plot(  rmse_test,   label='Train') 
+		plt.plot(  acc_train,  label='Test')
+		plt.plot(  acc_test,   label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Plot of RMSE over time")
+		plt.title("Plot of Classification Acc. over time")
 		plt.savefig(path_db+'/acc_samples.png') 
 		plt.clf()	
 
-
-		'''rmse_train =  np.split(rmse_train, num_chains)
-		print(rmse_train.T, ' rmse_tr -- ')
-
-		rmse_test = np.asarray(np.split(rmse_test, num_chains))
-
-
-		plt.plot( rmse_train.T,  label='Test')
-		plt.plot( rmse_test.T,   label='Train') 
+		plt.plot( rmse_train,  label='Test')
+		plt.plot( rmse_test,   label='Train') 
 		plt.legend(loc='upper right')
 
-		plt.title("Accuracy -  sampling  time")
-		plt.savefig(path_db+'/rmse_samples.png') 
-		plt.clf()'''
+		plt.title("Plot of EMSE over time")
+		plt.savefig(path+'/rmse_samples.png') 
+		plt.clf()
 
 
 
@@ -1050,8 +1119,8 @@ def main():
 		likelihood = likelihood_rep[:,0] # just plot proposed likelihood
 		likelihood = np.asarray(np.split(likelihood, num_chains))
 
-		#print(likelihood, ' rmse_tr -- ')
- 
+		print(accept_vec)
+
 
 	 
 	# Plots
