@@ -299,7 +299,9 @@ class ptReplica(multiprocessing.Process):
 
 		langevin_count = 0
 
-		pt_samples = samples * 0.8 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
+		pt_samples = samples * 0.75 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
+
+		init_count = 0
 
 
  
@@ -313,9 +315,13 @@ class ptReplica(multiprocessing.Process):
 			ratio = ((samples -i) /(samples*1.0)) 
 
 			if i < pt_samples:
-				self.adapttemp =  self.temperature * ratio  #  T1=T/log(k+1);
-			else:
-				self.adapttemp = 1
+				self.adapttemp =  self.temperature #* ratio  #  T1=T/log(k+1);
+			
+			if i == pt_samples and init_count ==0: # move to MCMC canonical
+				self.adapttemp = 1  
+				[likelihood, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w)
+				[_, pred_test, rmsetest] = self.likelihood_func(fnn, self.testdata, w)
+				init_count = 1
 
 
 			#print(self.adapttemp, ' temperature')
@@ -342,7 +348,7 @@ class ptReplica(multiprocessing.Process):
 			
 				diff_prop =  first - second
 
-				diff_prop =  diff_prop/self.temperature 
+				diff_prop =  diff_prop/self.adapttemp
 
 				langevin_count = langevin_count + 1
 
@@ -761,6 +767,9 @@ class ParallelTempering:
 	def show_results(self):
 
 		burnin = int(self.NumSamples*self.burn_in)
+
+
+		mcmc_samples = int(self.NumSamples*0.25)
  
 		likelihood_rep = np.zeros((self.num_chains, self.NumSamples - burnin, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
 	 	accept_percent = np.zeros((self.num_chains, 1))
@@ -816,6 +825,11 @@ class ParallelTempering:
 			dat = np.loadtxt(file_name)
 			acc_train[i,:] = dat[burnin:]
 
+		chain1_rmsetest= rmse_test[0,:]  # to get posterior of chain 0 only (PT chain with temp 1)
+		chain1_rmsetrain= rmse_train[0,:]
+
+		chain1_acctest= acc_test[0,:]  
+		chain1_acctrain= acc_train[0,:] 
 
 		posterior = pos_w.transpose(2,0,1).reshape(self.num_param,-1)  
 
@@ -825,23 +839,32 @@ class ParallelTempering:
 		#fx_test = fxtest_samples.reshape(self.num_chains*(self.NumSamples - burnin), self.testdata.shape[0]) # konarks version
  
 
-		likelihood_vec = likelihood_rep.transpose(2,0,1).reshape(2,-1) 
+		likelihood_vec = likelihood_rep.transpose(2,0,1).reshape(2,-1)  
+
+
+		'''rmse_train = rmse_train[  : , 0: mcmc_samples]
+		rmse_test = rmse_test[  : , 0: mcmc_samples]
+
+		acc_train = rmse_train[  : , 0: mcmc_samples]
+		acc_test = rmse_test[  : , 0: mcmc_samples] '''
 
 		rmse_train = rmse_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		acc_train = acc_train.reshape(self.num_chains*(self.NumSamples - burnin), 1)
 		rmse_test = rmse_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
-		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1)
+		acc_test = acc_test.reshape(self.num_chains*(self.NumSamples - burnin), 1) 
+
+		'''rmse_train = rmse_train.reshape(self.num_chains*(mcmc_samples), 1)
+		acc_train = acc_train.reshape(self.num_chains*(mcmc_samples), 1)
+		rmse_test = rmse_test.reshape(self.num_chains*(mcmc_samples), 1)
+		acc_test = acc_test.reshape(self.num_chains*(mcmc_samples), 1) 
+
+		rmse_train = np.append(rmse_train, chain1_rmsetrain)
+		rmse_test = np.append(rmse_test, chain1_rmsetest)  
+		acc_train = np.append(acc_train, chain1_acctrain)
+		acc_test = np.append(acc_test, chain1_acctest) '''
 
 
-		accept_vec  = accept_list 
-
-		print(accept_vec)
-
- 
- 
- 
-
-
+		accept_vec  = accept_list  
 
 		accept = np.sum(accept_percent)/self.num_chains 
 
@@ -862,7 +885,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(5, 9) :
+	for i in range(3, 9) :
 
 
 		problem = i
@@ -918,7 +941,7 @@ def main():
 			hidden = 12
 			ip = 9 #input
 			output = 2
-			NumSample =50000 
+			NumSample =50000
 	
 		if problem == 6: #Bank additional
 			data = np.genfromtxt('DATA/Bank/bank-processed.csv',delimiter=';')
@@ -991,7 +1014,7 @@ def main():
 		y_test =  testdata[:,netw[0]]
 		y_train =  traindata[:,netw[0]]
 
-		NumSample = NumSample * 0.2
+		#NumSample = NumSample * 0.4
 
  
 
@@ -1001,18 +1024,18 @@ def main():
  
 		num_chains = 10
 		swap_interval = 100000     # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
-		burn_in = 0.4
+		burn_in = 0.5
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False# False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients = False # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_hybridpos/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_hybridrw_/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_hybridpos/'  # save main results
+		problemfolder_db = 'PT_hybridrw_/'  # save main results
 
 	
 
@@ -1113,24 +1136,24 @@ def main():
 
 
 
-		plt.plot(x, acc_train,  label='Test')
-		plt.plot(x, acc_test,  label='Train') 
+		plt.plot(x, acc_train, '.',   label='Test')
+		plt.plot(x, acc_test,  '.', label='Train') 
 		plt.legend(loc='upper right')
 
 		plt.title("Plot of Classification Acc. over time")
 		plt.savefig(path+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot(  acc_train,  label='Test')
-		plt.plot(  acc_test,   label='Train') 
+		plt.plot(  acc_train, '.',  label='Test')
+		plt.plot(  acc_test,  '.',  label='Train') 
 		plt.legend(loc='upper right')
 
 		plt.title("Plot of Classification Acc. over time")
 		plt.savefig(path_db+'/acc_samples.png') 
 		plt.clf()	
 
-		plt.plot( rmse_train,  label='Test')
-		plt.plot( rmse_test,   label='Train') 
+		plt.plot( rmse_train, '.',   label='Test')
+		plt.plot( rmse_test, '.',   label='Train') 
 		plt.legend(loc='upper right')
 
 		plt.title("Plot of EMSE over time")
