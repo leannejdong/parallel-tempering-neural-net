@@ -299,7 +299,7 @@ class ptReplica(multiprocessing.Process):
 
 		langevin_count = 0
 
-		pt_samples = samples * 0.75 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
+		pt_samples = samples * 0.6 # this means that PT in canonical form with adaptive temp will work till pt  samples are reached
 
 		init_count = 0
 
@@ -444,7 +444,7 @@ class ptReplica(multiprocessing.Process):
 				if not self.parameter_queue.empty() : 
 					try:
 						result =  self.parameter_queue.get()
-						w= result[0:w.size]     
+						#w= result[0:w.size]     
 						#eta = result[w.size]
 						#likelihood = result[w.size+1]
 					except:
@@ -1023,19 +1023,19 @@ def main():
 		maxtemp = 4
  
 		num_chains = 10
-		swap_interval = 100000     # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		swap_interval = int(0.05 * NumSample/num_chains)    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
 		burn_in = 0.5
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients =True # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_hybridrw_/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_hybridrw_langevingrad/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_hybridrw_/'  # save main results
+		problemfolder_db = 'PT_hybridrw_langevingrad/'  # save main results
 
 	
 
