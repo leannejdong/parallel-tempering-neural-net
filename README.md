@@ -2,6 +2,15 @@
 
 Parallel Tempering is a sampling technique for bayesian inference. It is an extension of the Monte Carlo Markov Chains Method.
 
+## Running PT Classification 
+
+1. The main code: https://github.com/sydney-machine-learning/parallel-tempering-neural-net/blob/master/multicore-pt-classification/pt_classifier_hybridpos.py. The langevin grad gives better results and you can turn it to True/False in main. 
+
+2. You need to use subline text editor and run it straight from the terminal. eg. go to the folder using terminal and then: "python pt_classifier_hybridpos.py" would run it. 
+
+3. Also, note that there are two places the code saves the results. one in Desktop - so you need to change the path: line 1036: problemfolder = '/home/rohit/Desktop/PT/PT_hybridrw_langevingrad/' # change this to your directory for results output - produces large datasets 
+
+
 ## SOME CONCLUSIONS FROM THE EXPERIMENTATION:
 
  1. Increasing Number of Chains with constant maximum temperature and number of samples increase the RMSE values. This is probably due to less number of samples per chain and therefore low training.
