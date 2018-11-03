@@ -743,51 +743,7 @@ class ParallelTempering:
 		for index in range(0,self.num_chains):
 			self.chains[index].join()
 		self.chain_queue.join()
-		
-		'''while True:
-			for k in range(0,self.num_chains):
-				self.wait_chain[j].wait()
-				#print(chain_num)
-			for k in range(0,self.num_chains-1):
-				#print('starting swap')
-				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
-				while True:
-					if self.chain_queue.empty():
-						self.chain_queue.task_done()
-						#print(k,'EMPTY QUEUE')
-						break
-					swap_process = self.chain_queue.get()
-					#print(swap_process)
-					if swap_process is None:
-						self.chain_queue.task_done()
-						#print(k,'No Process')
-						break
-					param1, param2 = swap_process
-					
-					self.parameter_queue[k].put(param1)
-					self.parameter_queue[k+1].put(param2)
-			for k in range (self.num_chains):
-					#print(k)
-					self.event[k].set()
-			count = 0
-			# Surrogate's Events: 
-			 
-			for i in range(self.num_chains):
-				if self.chains[i].is_alive() is False:
-					count+=1
-			#print(count)
-			if count == self.num_chains  :
-				print(count)
-				break
-			
-		
-		#JOIN THEM TO MAIN PROCESS
-		for j in range(0,self.num_chains):
-			self.chains[j].join()
-		self.chain_queue.join()
-		for j in range(0,self.num_chains):
-			self.parameter_queue[i].close()
-			self.parameter_queue[i].join_thread() '''
+		 
 		 
 
 		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec ,   accept_vec, accept  = self.show_results()
