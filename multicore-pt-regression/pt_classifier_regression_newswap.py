@@ -238,7 +238,7 @@ class ptReplica(multiprocessing.Process):
 		w_size = (netw[0] * netw[1]) + (netw[1] * netw[2]) + netw[1] + netw[2]  # num of weights and bias
 		pos_w = np.ones((samples, w_size)) #Posterior for all weights
 		#pos_w = np.ones((samples, w_size)) #Posterior for all weights
-	 	lhood_list = np.zeros((samples,1))
+		lhood_list = np.zeros((samples,1))
 		surrogate_list = np.zeros((samples,1))
 		#fxtrain_samples = np.ones((batch_save, trainsize)) #Output of regression FNN for training samples
 		#fxtest_samples = np.ones((batch_save, testsize)) #Output of regression FNN for testing samples
@@ -353,7 +353,7 @@ class ptReplica(multiprocessing.Process):
 
 			eta_pro = eta + np.random.normal(0, step_eta, 1)
 			tau_pro = math.exp(eta_pro)
-    
+	
   
 
 			[likelihood_proposal, pred_train, rmsetrain] = self.likelihood_func(fnn, self.traindata, w_proposal,tau_pro) 
@@ -421,29 +421,33 @@ class ptReplica(multiprocessing.Process):
 				acc_train[i+1,] = acc_train[i,]
 				acc_test[i+1,] = acc_test[i,]
 
-				#x = x + 1
-			#SWAPPING PREP
-			if i%self.swap_interval == 0:
-				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.adapttemp]),np.asarray([i])])
+			 
+
+			if (i % self.swap_interval == 0 and i != 0 ):
+				print('\nTemperature: {} Swapping weights: {}'.format(self.temperature, w[:2]))
+				param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood*self.temperature]),np.asarray([self.temperature])])
 				self.parameter_queue.put(param)
 				self.signal_main.set()
-				self.event.wait()
-				# retrieve parameters fom queues if it has been swapped
-				if not self.parameter_queue.empty() : 
+				self.event.wait() 
+				if not self.parameter_queue.empty() :
 					try:
 						result =  self.parameter_queue.get()
-						w= result[0:w.size]     
-						#eta = result[w.size]
-						#likelihood = result[w.size+1]
+						w = result[0:self.w_size]
+						eta = result[self.w_size]
+						likelihood = result[self.w_size+1]/self.temperature
+						print('Temperature: {} Swapped weights: {}'.format(self.temperature, w[:2]))
 					except:
-						print ('error') 
+						print ('error')
+				else:
+					print("Khali - swap bug fix by Arpit Kapoor) ")
+				self.event.clear()
+
+			#elapsed_time = ":".join(Replica.convert_time(time.time() - self.start_time)) 
  
 
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.adapttemp]),np.asarray([i])])
-		#print('SWAPPED PARAM',self.adapttemp,param)
-		self.parameter_queue.put(param)
-		#param = np.concatenate([s_pos_w[i-self.surrogate_interval:i,:],lhood_list[i-self.surrogate_interval:i,:]],axis=1)
-		#self.surrogate_parameterqueue.put(param) 
+ 
+		self.parameter_queue.put(param) 
 
 		print ((num_accepted*100 / (samples * 1.0)), '% was accepted')
 		accept_ratio = num_accepted / (samples * 1.0) * 100 
@@ -694,8 +698,53 @@ class ParallelTempering:
 		for j in range(0,self.num_chains):        
 			self.chains[j].start()
 		#SWAP PROCEDURE
-		
+
 		while True:
+			count = 0
+			for index in range(self.num_chains):
+				if not self.chains[index].is_alive():
+					count+=1
+					print(str(self.chains[index].temperature) +" Dead")
+
+			if count == self.num_chains:
+				break
+			print("Waiting")
+			timeout_count = 0
+			for index in range(0,self.num_chains):
+				print("Waiting for chain: {}".format(index+1))
+				flag = self.wait_chain[index].wait(timeout=5)
+				if flag:
+					print("Signal from chain: {}".format(index+1))
+					timeout_count += 1
+
+			if timeout_count != self.num_chains:
+				print("Skipping the swap!")
+				continue
+			print("Event occured")
+			for index in range(0,self.num_chains-1):
+				print('starting swap')
+				try:
+					param_1, param_2, swapped = self.swap_procedure(self.parameter_queue[index],self.parameter_queue[index+1])
+					self.parameter_queue[index].put(param_1)
+					self.parameter_queue[index+1].put(param_2)
+					if index == 0:
+						if swapped:
+							swaps_appected_main += 1
+						total_swaps_main += 1
+				except:
+					print("Nothing Returned by swap method!")
+			for index in range (self.num_chains):
+					self.event[index].set()
+					self.wait_chain[index].clear()
+
+		print("Joining processes")
+
+		#JOIN THEM TO MAIN PROCESS
+		for index in range(0,self.num_chains):
+			self.chains[index].join()
+		self.chain_queue.join()
+		
+		'''while True:
 			for k in range(0,self.num_chains):
 				self.wait_chain[j].wait()
 				#print(chain_num)
@@ -738,7 +787,7 @@ class ParallelTempering:
 		self.chain_queue.join()
 		for j in range(0,self.num_chains):
 			self.parameter_queue[i].close()
-			self.parameter_queue[i].join_thread() 
+			self.parameter_queue[i].join_thread() '''
 		 
 
 		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec ,   accept_vec, accept  = self.show_results()
@@ -758,7 +807,7 @@ class ParallelTempering:
 		burnin = int(self.NumSamples*self.burn_in)
  
 		likelihood_rep = np.zeros((self.num_chains, self.NumSamples - 1, 2)) # index 1 for likelihood posterior and index 0 for Likelihood proposals. Note all likilihood proposals plotted only
-	 	accept_percent = np.zeros((self.num_chains, 1))
+		accept_percent = np.zeros((self.num_chains, 1))
 		accept_list = np.zeros((self.num_chains, self.NumSamples )) 
  
 		pos_w = np.zeros((self.num_chains,self.NumSamples - burnin, self.num_param)) 
@@ -857,9 +906,9 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(1, 8) : 
+	for i in range(2, 11) : 
 
-		problem =	i
+		problem =	1
 		if problem ==	1:
 			traindata = np.loadtxt("Data_OneStepAhead/Lazer/train.txt")
 			testdata	= np.loadtxt("Data_OneStepAhead/Lazer/test.txt")	#
@@ -919,9 +968,11 @@ def main():
 
 
 		 
-		maxtemp = 4
+		maxtemp = i
 
-		swap_ratio =  0.04
+		#swap_ratio =  0.04
+
+		swap_ratio = 0.01
  
 		num_chains =  10
 	 
@@ -931,14 +982,14 @@ def main():
 	 
 		learn_rate = 0.1  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = True  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients = False  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/Res_allprob_langrad01/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/Res_Maxtemp/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'Res_allprob_langrad01/'  # save main results
+		problemfolder_db = 'Res_Maxtemp/'  # save main results
 
 	
 
@@ -983,11 +1034,11 @@ def main():
 		
 		pos_w, fx_train, fx_test,  rmse_train, rmse_test, acc_train, acc_test,   likelihood_rep , swap_perc,    accept_vec, accept = pt.run_chains()
 
- 		list_end = accept_vec.shape[1] 
+		list_end = accept_vec.shape[1] 
 		accept_ratio = accept_vec[:,  list_end-1:list_end]/list_end   
- 		accept_per = np.mean(accept_ratio) * 100
+		accept_per = np.mean(accept_ratio) * 100
 
- 		print(accept_per, ' accept_per')
+		print(accept_per, ' accept_per')
 
 
 
