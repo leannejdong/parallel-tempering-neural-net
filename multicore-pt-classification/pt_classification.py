@@ -449,6 +449,9 @@ class ptReplica(multiprocessing.Process):
 						#likelihood = result[w.size+1]
 					except:
 						print ('error') 
+				else:
+					print("Khali - swap bug fix by Arpit Kapoor) ")
+				self.event.clear()
  
 
 		param = np.concatenate([w, np.asarray([eta]).reshape(1), np.asarray([likelihood]),np.asarray([self.temperature]),np.asarray([i])])
@@ -708,49 +711,49 @@ class ParallelTempering:
 		#SWAP PROCEDURE
 		
 		while True:
-			for k in range(0,self.num_chains):
-				self.wait_chain[j].wait()
-				#print(chain_num)
-			for k in range(0,self.num_chains-1):
-				#print('starting swap')
-				self.chain_queue.put(self.swap_procedure(self.parameter_queue[k],self.parameter_queue[k+1])) 
-				while True:
-					if self.chain_queue.empty():
-						self.chain_queue.task_done()
-						#print(k,'EMPTY QUEUE')
-						break
-					swap_process = self.chain_queue.get()
-					#print(swap_process)
-					if swap_process is None:
-						self.chain_queue.task_done()
-						#print(k,'No Process')
-						break
-					param1, param2 = swap_process
-					
-					self.parameter_queue[k].put(param1)
-					self.parameter_queue[k+1].put(param2)
-			for k in range (self.num_chains):
-					#print(k)
-					self.event[k].set()
 			count = 0
-			# Surrogate's Events: 
-			 
-			for i in range(self.num_chains):
-				if self.chains[i].is_alive() is False:
+			for index in range(self.num_chains):
+				if not self.chains[index].is_alive():
 					count+=1
-			#print(count)
-			if count == self.num_chains  :
-				print(count)
+					print(str(self.chains[index].temperature) +" Dead")
+
+			if count == self.num_chains:
 				break
-			
-		
+			print("Waiting")
+			timeout_count = 0
+			for index in range(0,self.num_chains):
+				print("Waiting for chain: {}".format(index+1))
+				flag = self.wait_chain[index].wait(timeout=5)
+				if flag:
+					print("Signal from chain: {}".format(index+1))
+					timeout_count += 1
+
+			if timeout_count != self.num_chains:
+				print("Skipping the swap!")
+				continue
+			print("Event occured")
+			for index in range(0,self.num_chains-1):
+				print('starting swap')
+				try:
+					param_1, param_2, swapped = self.swap_procedure(self.parameter_queue[index],self.parameter_queue[index+1])
+					self.parameter_queue[index].put(param_1)
+					self.parameter_queue[index+1].put(param_2)
+					if index == 0:
+						if swapped:
+							swaps_appected_main += 1
+						total_swaps_main += 1
+				except:
+					print("Nothing Returned by swap method!")
+			for index in range (self.num_chains):
+					self.event[index].set()
+					self.wait_chain[index].clear()
+
+		print("Joining processes")
+
 		#JOIN THEM TO MAIN PROCESS
-		for j in range(0,self.num_chains):
-			self.chains[j].join()
+		for index in range(0,self.num_chains):
+			self.chains[index].join()
 		self.chain_queue.join()
-		for j in range(0,self.num_chains):
-			self.parameter_queue[i].close()
-			self.parameter_queue[i].join_thread() 
 		 
 
 		pos_w, fx_train, fx_test,   rmse_train, rmse_test, acc_train, acc_test,  likelihood_vec ,   accept_vec, accept  = self.show_results()
@@ -1024,7 +1027,7 @@ def main():
 		maxtemp = 4
  
 		num_chains = 10
-		swap_interval = int(0.05 * NumSample/num_chains)    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		swap_interval = int(0.02 * NumSample/num_chains)    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
 		burn_in = 0.5
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
@@ -1034,9 +1037,9 @@ def main():
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_hybridrw_langevingrad/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_EvalSwapLG/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_hybridrw_langevingrad/'  # save main results
+		problemfolder_db = 'PT_EvalSwapLG/'  # save main results
 
 	
 
