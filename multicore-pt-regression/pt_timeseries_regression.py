@@ -137,7 +137,7 @@ class Network:
 
 class ptReplica(multiprocessing.Process):
 
-	def __init__(self, use_langevin_gradients, learn_rate,  w,  minlim_param, maxlim_param, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, path, parameter_queue, main_process,event ):
+	def __init__(self, use_langevin_gradients, learn_rate,  w,  minlim_param, maxlim_param, samples, traindata, testdata, topology, burn_in, temperature, swap_interval, langevin_prob, path, parameter_queue, main_process,event ):
 		#MULTIPROCESSING VARIABLES
 		multiprocessing.Process.__init__(self)
 		self.processID = temperature
@@ -171,7 +171,7 @@ class ptReplica(multiprocessing.Process):
 
 		self.learn_rate = learn_rate
 
-		self.l_prob = 0.5  # can be evaluated for diff problems - if data too large keep this low value since the gradients cost comp time
+		self.l_prob = langevin_prob  # can be evaluated for diff problems - if data too large keep this low value since the gradients cost comp time
 
  
 
@@ -365,7 +365,7 @@ class ptReplica(multiprocessing.Process):
 			diff_likelihood = likelihood_proposal - likelihood
  
 
-			surg_likeh_list[i+1,0] = likelihood_proposal
+			surg_likeh_list[i+1,0] = likelihood_proposal * self.adapttemp
 			#surg_likeh_list[i+1,1] = np.nan  
  
 			try:
@@ -492,7 +492,7 @@ class ptReplica(multiprocessing.Process):
 
 class ParallelTempering:
 
-	def __init__(self,  use_langevin_gradients, learn_rate, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path):
+	def __init__(self,  use_langevin_gradients, learn_rate, traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, langevin_prob, path):
 		#FNN Chain variables
 		self.traindata = traindata
 		self.testdata = testdata
@@ -502,6 +502,8 @@ class ParallelTempering:
 		self.swap_interval = swap_interval
 		self.path = path
 		self.maxtemp = maxtemp
+
+		self.langevin_prob = langevin_prob
 		self.num_swap = 0
 		self.total_swap_proposals = 0
 		self.num_chains = num_chains
@@ -640,7 +642,7 @@ class ParallelTempering:
 		for i in range(0, self.num_chains):
 
 			w = np.random.randn(self.num_param)
-			self.chains.append(ptReplica( self.use_langevin_gradients, self.learn_rate, w,  self.minlim_param, self.maxlim_param, self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval,self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i]))
+			self.chains.append(ptReplica( self.use_langevin_gradients, self.learn_rate, w,  self.minlim_param, self.maxlim_param, self.NumSamples,self.traindata,self.testdata,self.topology,self.burn_in,self.temperatures[i],self.swap_interval, self.langevin_prob, self.path,self.parameter_queue[i],self.wait_chain[i],self.event[i]))
 
 	def surr_procedure(self,queue):
 
@@ -862,7 +864,7 @@ class ParallelTempering:
 
 def main():
 
-	for i in range(2, 11) : 
+	for i in range(1, 9) : 
 
 		problem =	1
 		if problem ==	1:
@@ -924,7 +926,7 @@ def main():
 
 
 		 
-		maxtemp = i
+		maxtemp = 5
 
 		#swap_ratio =  0.04
 
@@ -938,14 +940,14 @@ def main():
 	 
 		learn_rate = 0.1  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients = False  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients = True  # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/Res_Maxtemp/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/Res_LG-Lprob/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'Res_Maxtemp/'  # save main results
+		problemfolder_db = 'Res_LG-Lprob/'  # save main results
 
 	
 
@@ -973,10 +975,12 @@ def main():
 		resultingfile_db = open( path_db+'/master_result_file.txt','a+')  
   
 		timer = time.time() 
+
+		langevin_prob = i/10
 		
 	
 
-		pt = ParallelTempering( use_langevin_gradients,  learn_rate,  traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, path)
+		pt = ParallelTempering( use_langevin_gradients,  learn_rate,  traindata, testdata, topology, num_chains, maxtemp, NumSample, swap_interval, langevin_prob, path)
 
 		directories = [  path+'/predictions/', path+'/posterior', path+'/results', path+'/surrogate', path+'/surrogate/learnsurrogate_data', path+'/posterior/pos_w',  path+'/posterior/pos_likelihood',path+'/posterior/surg_likelihood',path+'/posterior/accept_list'  ]
 	
@@ -1033,7 +1037,7 @@ def main():
 
 		xv = name+'_'+ str(run_nb) 
  
-		allres =  np.asarray([ problem, NumSample, maxtemp, swap_interval, use_langevin_gradients, learn_rate, rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept_per, timetotal]) 
+		allres =  np.asarray([ problem, NumSample, maxtemp, swap_interval, langevin_prob, learn_rate,  rmse_tr, rmsetr_std, rmsetr_max, rmse_tes, rmsetest_std, rmsetes_max, swap_perc, accept_per, timetotal]) 
 		 
 		np.savetxt(outres_db,  allres   , fmt='%1.4f', newline=' '  )   
 		np.savetxt(resultingfile_db,   allres   , fmt='%1.4f',  newline=' ' ) 

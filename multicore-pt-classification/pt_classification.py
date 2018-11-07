@@ -401,7 +401,7 @@ class ptReplica(multiprocessing.Process):
  
 			
 			prop_list[i+1,] = w_proposal	
-			likeh_list[i+1,0] = likelihood_proposal
+			likeh_list[i+1,0] = likelihood_proposal * self.adapttemp
 
  
 
@@ -1024,22 +1024,23 @@ def main():
 
 
 		 
-		maxtemp = 4
+		maxtemp = 10
  
 		num_chains = 10
-		swap_interval = int(0.02 * NumSample/num_chains)    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
+		swap_ratio = float(sys.argv[1])
+		swap_interval = int(swap_ratio * NumSample/num_chains)    # int(swap_ratio * (NumSample/num_chains)) #how ofen you swap neighbours. note if swap is more than Num_samples, its off
 		burn_in = 0.5
 	 
 		learn_rate = 0.01  # in case langevin gradients are used. Can select other values, we found small value is ok. 
 
-		use_langevin_gradients =True # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
+		use_langevin_gradients =False # False leaves it as Random-walk proposals. Note that Langevin gradients will take a bit more time computationally
 
 
 
 
-		problemfolder = '/home/rohit/Desktop/PT/PT_EvalSwapLG/'  # change this to your directory for results output - produces large datasets
+		problemfolder = '/home/rohit/Desktop/PT/PT_EvalSwapRW/'  # change this to your directory for results output - produces large datasets
 
-		problemfolder_db = 'PT_EvalSwapLG/'  # save main results
+		problemfolder_db = 'PT_EvalSwapRW/'  # save main results
 
 	
 
