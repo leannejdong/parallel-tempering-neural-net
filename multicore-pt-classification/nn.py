@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 def main():
 
-	for i in range(1, 9) : 
+	for i in range(3, 9) : 
 
 		problem = i
 		
@@ -111,28 +111,42 @@ def main():
 			y_train = classes[indices[:np.int(train_ratio*features.shape[0])],:].ravel()
 			x_test = features[indices[np.int(train_ratio*features.shape[0])]:,:]
 			y_test = classes[indices[np.int(train_ratio*features.shape[0])]:,:].ravel()
+		adam_train = []
+		adam_test =[]
+		sgd_tr = []
+		sgd_te = []
+		res = open('result_comparison.txt','a+')
+		for l in range(30):
+			mlp_adam = MLPClassifier(hidden_layer_sizes=(hidden, ), activation='relu', solver='adam', alpha=0.1,max_iter=100000, tol=0)
+			mlp_adam.fit(x_train,y_train)
+			train_acc = mlp_adam.score(x_train, y_train)
+			test_acc = mlp_adam.score(x_test, y_test)
+			print('ADAM', name,train_acc, test_acc)
+			print('ADAM', name,train_acc, test_acc, file = res)
+			adam_train.append(train_acc)
+			adam_test.append(test_acc)
+			#np.savetxt(res, np.asarray([1, problem,train_acc, test_acc]), fmt='%1.2f')
+			
+			mlp_sgd = MLPClassifier(hidden_layer_sizes=(hidden, ), activation='relu', solver='sgd', alpha=0.1,max_iter=100000, tol=0)
+			mlp_sgd.fit(x_train,y_train)
+			train_acc = mlp_sgd.score(x_train, y_train)
+			test_acc = mlp_sgd.score(x_test, y_test)
+			print('SGD', name,train_acc, test_acc)
+			print('SGD', name,train_acc, test_acc , file = res)
+			sgd_tr.append(train_acc)
+			sgd_te.append(test_acc)
+			#np.savetxt(res, (2, problem,train_acc, test_acc), fmt='%1.2f')
+			
+			# rf = RandomForestClassifier()
+			# rf.fit(x_train,y_train)
+			# train_acc = rf.score(x_train,y_train)
+			# test_acc = rf.score(x_test, y_test)
+			# print('RF', name,train_acc, test_acc, file = res)
+			# #np.savetxt(res, (3, problem,train_acc, test_acc), fmt='%1.2f')
 		
-		res = open('../result_comparison.txt','a+')
-		
-		mlp_adam = MLPClassifier(hidden_layer_sizes=(hidden, ), activation='relu', solver='adam', alpha=0.1,max_iter=100000, tol=0)
-		mlp_adam.fit(x_train,y_train)
-		train_acc = mlp_adam.score(x_train, y_train)
-		test_acc = mlp_adam.score(x_test, y_test)
-		print('ADAM', name,train_acc, test_acc)
-		#np.savetxt(res, np.asarray([1, problem,train_acc, test_acc]), fmt='%1.2f')
-		
-		mlp_sgd = MLPClassifier(hidden_layer_sizes=(hidden, ), activation='relu', solver='sgd', alpha=0.1,max_iter=100000, tol=0)
-		mlp_sgd.fit(x_train,y_train)
-		train_acc = mlp_sgd.score(x_train, y_train)
-		test_acc = mlp_sgd.score(x_test, y_test)
-		print('SGD', name,train_acc, test_acc)
-		#np.savetxt(res, (2, problem,train_acc, test_acc), fmt='%1.2f')
-		
-		rf = RandomForestClassifier()
-		rf.fit(x_train,y_train)
-		train_acc = rf.score(x_train,y_train)
-		test_acc = rf.score(x_test, y_test)
-		print('RF', name,train_acc, test_acc)
-		#np.savetxt(res, (3, problem,train_acc, test_acc), fmt='%1.2f')
-
+		print('ADAM net train', name, np.mean(adam_train[:]), np.std(adam_train[:]), np.max(adam_train[:]), file=res)
+		print('ADAM net test', name, np.mean(adam_test[:]), np.std(adam_test[:]), max(adam_test[:]), file=res)
+		print('SGD net train', name, np.mean(sgd_tr[:]), np.std(sgd_tr[:]), max(sgd_tr[:]), file=res)
+		print('SGD net test', name, np.mean(sgd_te[:]), np.std(sgd_te[:]), max(sgd_te[:]), file=res)
+		res.close()
 if __name__ == "__main__": main()
